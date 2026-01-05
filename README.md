@@ -101,4 +101,9 @@ Enabled via kube-apiserver flags:
 --enable-admission-plugins=PodSecurity,MutatingAdmissionWebhook
 ```
 
+to get namespace labels:
+```bash
+kubectl get namespace <namespace> --show-labels
+```
+
 
