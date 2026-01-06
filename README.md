@@ -105,5 +105,24 @@ to get namespace labels:
 ```bash
 kubectl get namespace <namespace> --show-labels
 ```
+## OPA
+to download binaries for opa always use -L with curl , -L follows redirect wince actual binaries exist at
+redirect storage page objects.githubusercontent.com , without this we will not get binary but only html
+```
+curl -L -o opa https://github.com/open-policy-agent/opa/releases/download/v0.38.1/opa_linux_amd64
+chmod 755 ./opa
+./opa run -s &
+
+```
+
+to test policy file with opa
+```
+./opa test example.rego
+```
+
+to load policy file in opa. here note --data-binary is necessary, We use PUT with --data-binary because OPA’s policy API is idempotent and resource-based, and POST is not supported for uploading policies.
+```
+curl -X PUT --data-binary @sample.rego http://localhost:8181/v1/policies/samplepolicy
+```
 
 
