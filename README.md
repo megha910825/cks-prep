@@ -175,4 +175,61 @@ Gatekeeper periodically scans existing resources and reports violations:
 ```bash
 kubectl get constraintviolations
 ```
+## secret
+secret object can be created
+```
+kubectl create secret generic test --from-literal=host=db_host --from-literal=password=hello
+```
+this secret can then be used in pod via envFrom and secretRef fields in pod spec section as follows:
+
+```yaml
+spec:
+  containers:
+    envFrom:
+      - secretRef:
+          name: test
+```
+
+## RuntimeClass:
+ to get the information of current runtime used
+ ```bash
+kubectl get nodes -o wide
+```
+this command will show containerd or anything else, then to know runtime
+we can check either /etc/containerd/config.toml to know the runtime
+or use the command:
+```bash
+ps -aux|grep runc
+```
+to get no of runtimeclass already present in environment
+```bash
+kubectl get runtimeclasses
+kubectl get rc
+```
+to get the api group of runtimeclass:
+```bash
+kubectl api-resources | grep RuntimeClass
+```
+create runtime class via yaml 
+```yaml
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: gvisor
+handler: runsc
+```
+to use this in pod
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  runtimeClassName: gvisor
+  containers:
+    - name: app
+      image: nginx
+```
+
+
 
