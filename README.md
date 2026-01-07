@@ -124,5 +124,54 @@ to load policy file in opa. here note --data-binary is necessary, We use PUT wit
 ```
 curl -X PUT --data-binary @sample.rego http://localhost:8181/v1/policies/samplepolicy
 ```
+## OPA Gatekeeper
+OPA Gatekeeper is a policy enforcement tool for Kubernetes that helps you define, enforce, and audit rules about how your clusters are used
+Gatekeeper lets you say “what is allowed and what is not” in Kubernetes — and enforces it automatically.
 
+Gatekeeper workflow:
+- User applies a manifest (kubectl apply)
+- Kubernetes API Server calls Gatekeeper (admission webhook)
+- Gatekeeper evaluates policies (Rego)
+- Request is allowed or denied
+- Violations are recorded for auditing
+
+🧩 Key Components
+1️⃣ ConstraintTemplate
+Defines what a policy checks (written in Rego).
+```yaml
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredLabels
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredlabels
+        violation[{"msg": msg}] {
+          missing := input.parameters.labels[_]
+          not input.review.object.metadata.labels[missing]
+          msg := sprintf("Missing label: %v", [missing])
+        }
+```
+2️⃣ Constraint
+Defines where and how the policy applies.
+```yaml
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredLabels
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Namespace"]
+  parameters:
+    labels: ["owner", "environment"]
+```
+3️⃣ Audit
+Gatekeeper periodically scans existing resources and reports violations:
+```bash
+kubectl get constraintviolations
+```
 
