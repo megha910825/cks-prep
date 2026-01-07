@@ -136,6 +136,7 @@ Gatekeeper workflow:
 - Violations are recorded for auditing
 
 🧩 Key Components
+
 1️⃣ ConstraintTemplate
 Defines what a policy checks (written in Rego).
 ```yaml
