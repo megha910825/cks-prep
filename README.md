@@ -230,6 +230,19 @@ spec:
     - name: app
       image: nginx
 ```
+## resourcequotas
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-resources
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: "1Gi"
+    limits.cpu: "2"
+    limits.memory: "2Gi"
+    requests.nvidia.com/gpu
 
 
 
