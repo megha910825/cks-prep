@@ -243,6 +243,8 @@ spec:
     limits.cpu: "2"
     limits.memory: "2Gi"
     requests.nvidia.com/gpu
-
+```
+kubernetes network policy work on above data link layer for pod to pod communication in osi model.
+that is network layer.
 
 
