@@ -281,5 +281,52 @@ to remove taint from node:
 ```bash
 kubectl taint node node03 team=team-c:NoSchedule-
 ```
+## Istio
+to check if istio enabled ns exist. note namespace should be injected with istio here.
+```bash
+kubectl get ns --show-labels
+```
+> https://istio.io/latest/docs/reference/config/security/peer_authentication/
+```yaml
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: foo ## for global policy set namespace to namespace: istio-system
+spec:
+  mtls:
+    mode: STRICT
+```
+to enable istion injection to test namespace
+```bash
+kubectl label ns test istio-injection=enabled
+```
+
+to create specific namespace level permissive mode peer authntication policy
+```yaml
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: foo
+spec:
+  mtls:
+    mode: PERMISSIVE
+
+```
+to create permissive policy for specific app
+```yaml
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: finance
+  namespace: foo
+spec:
+  selector:
+    matchLabels:
+      app: finance
+  mtls:
+    mode: STRICT
+```
 
 
