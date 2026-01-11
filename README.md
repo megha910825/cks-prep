@@ -252,5 +252,34 @@ to taint node in kubernetes
 ```bash
 kubectl taint node node03 team=team-c:NoSchedule
 ```
+to apply toleration on pod for taint here is the yaml
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: team-a-pod
+  name: team-a-pod
+  namespace: team-a
+
+spec:
+  tolerations:
+  - effect: NoSchedule
+    key: team
+    operator: Equal
+    value: team-a
+  containers:
+  - image: nginx
+    name: team-a-pod
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+```
+to remove taint from node:
+```bash
+kubectl taint node node03 team=team-c:NoSchedule-
+```
 
 
