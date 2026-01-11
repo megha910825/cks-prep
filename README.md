@@ -247,4 +247,10 @@ spec:
 kubernetes network policy work on above data link layer for pod to pod communication in osi model.
 that is network layer.
 
+## Taints and Toleration
+to taint node in kubernetes
+```bash
+kubectl taint node node03 team=team-c:NoSchedule
+```
+
 
