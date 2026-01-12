@@ -328,5 +328,85 @@ spec:
   mtls:
     mode: STRICT
 ```
+## cilium
+[cilium documentation](https://docs.cilium.io/en/stable/security/network/encryption/)
+```
+cilium install --version 1.18.5
+cilium status --wait
+cilium connectivity test
+```
+to install cilium along with wirecard encryption enabled is:
+```
+cilium install --version 1.18.5    --set encryption.enabled=true    --set encryption.type=wireguard
+```
+to install it via helm
+```
+# Install Cilium with encryption enabled
+helm install cilium cilium/cilium --version v1.18.0-pre.0 \
+  --namespace kube-system \
+  --set encryption.enabled=true \
+  --set encryption.type=wireguard
+```
+to check clium status
+```
+cilium status
+```
+for cilium encryption status
+```
+cilium encryption status
+```
+create a curl pod with command cleep 3600
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: curlpod
+  name: curlpod
+spec:
+  containers:
+  - image: rapidfort/curl
+    name: curlpod
+    command: ["sleep"]
+    args: ["3600"]
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+```
+
+Check connectivity between the pods, in a new terminal window run the following command:
+```
+watch kubectl exec -it curlpod -- curl -s http://nginx
+
+```
+Run a bash shell in one of the Cilium pods with
+```
+kubectl -n kube-system exec -ti ds/cilium -- bash
+```
+Check that WireGuard has been enabled (number of peers should correspond to a number of nodes subtracted by one)
+```
+cilium-dbg status | grep Encryption
+```
+Install tcpdump
+```
+apt-get update
+apt-get -y install tcpdump
+```
+Check that traffic is sent via the cilium_wg0 tunnel device is encrypted:
+```
+tcpdump -n -i cilium_wg0 -X
+```
+Here we are using `tcpdump`` to capture and display detailed network packets on the cilium_wg0 interface.
+
+The -n option avoids DNS lookups, and the -X option shows packet content in both hexadecimal and ASCII format.
+
+Via tcpdump, you should see the traffic between the pods.
+
+We see requests from curlpod to nginx and responses from nginx to curlpod in tcpdump output.
+
+
+
+
 
 
