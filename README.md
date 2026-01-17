@@ -405,7 +405,27 @@ Via tcpdump, you should see the traffic between the pods.
 
 We see requests from curlpod to nginx and responses from nginx to curlpod in tcpdump output.
 
+## creating and analyzing sboms:
+- Syft: A CLI tool and Go library for generating a Software Bill of Materials (SBOM) from container images and filesystems. Exceptional for vulnerability detection when used with a scanner like Grype.
+  installation of syft:
+  ```bash
+  curl -sSfL https://get.anchore.io/syft | sudo sh -s -- -b /usr/local/bin
+  ```
+- Grype:A vulnerability scanner for container images and filesystems.
+  installation of grype:
+  ```bash
+  curl -sSfL https://get.anchore.io/grype | sudo sh -s -- -b /usr/local/bin
+  ```
+  > reference:
+     1. https://github.com/anchore/syft
+     2. https://github.com/anchore/grype
 
+to read grype reports we can use jq filters as follows:
+```bash
+cat grype-report.json | jq '.matches[]|select(.vulnerability.id=="CVE-2018-1000517")|.vulnerability.description'
+```
+
+  
 
 
 
