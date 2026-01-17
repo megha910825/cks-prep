@@ -424,7 +424,15 @@ to read grype reports we can use jq filters as follows:
 ```bash
 cat grype-report.json | jq '.matches[]|select(.vulnerability.id=="CVE-2018-1000517")|.vulnerability.description'
 ```
+## kubelinter
+KubeLinter analyzes Kubernetes YAML files and Helm charts and checks them against various best practices, with a focus on production readiness and security.
 
+to install kubelinter
+```bash
+curl -LO https://github.com/stackrox/kube-linter/releases/download/v0.8.1/kube-linter-linux.tar.gz
+tar -xvf kube-linter-linux.tar.gz
+mv kube-linter /usr/local/bin/
+```
   
 
 
