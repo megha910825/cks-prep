@@ -489,6 +489,22 @@ spec:
  - --enable-admission-plugins=NodeRestriction,ImagePolicyWebhook
  - --admission-control-config-file=/etc/kubernetes/pki/admission_configuration.yaml
 ```
+## kubesec
+kubesec is used to scannung kubernetes objects such as damenonsets, deployments,replicasets.
+Steps to install kubesec on linux machine:
+```bash
+wget https://github.com/controlplaneio/kubesec/releases/download/v2.13.0/kubesec_linux_amd64.tar.gz
+
+tar -xvf  kubesec_linux_amd64.tar.gz
+
+mv kubesec /usr/bin/
+```
+> Note: Kubesec dont support bash
+
+kubesec command to scan the yaml:
+```bash
+kubesec scan node.yaml > /root/kubesec_report.json
+```
 
 
 
