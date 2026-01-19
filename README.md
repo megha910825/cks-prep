@@ -482,6 +482,14 @@ spec:
           runAsUser: 1000
           runAsNonRoot: true
 ```
+## enable ImagePolicyWebhook
+
+- Add this to kube api server manifest file
+```
+ - --enable-admission-plugins=NodeRestriction,ImagePolicyWebhook
+ - --admission-control-config-file=/etc/kubernetes/pki/admission_configuration.yaml
+```
+
 
 
 
