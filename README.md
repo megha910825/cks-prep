@@ -506,6 +506,42 @@ kubesec command to scan the yaml:
 kubesec scan node.yaml > /root/kubesec_report.json
 ```
 
+## Trivy
+Trivy is a comprehensive and versatile security scanner. Trivy has scanners that look for security issues, and targets where it can find those issues.
+Installation
+```bash
+sudo apt-get install wget gnupg
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+sudo apt-get update
+sudo apt-get install trivy
+```
+> Reference: https://github.com/aquasecurity/trivy
+
+command to get trivy version:
+
+```bash
+trivy version
+```
+command to scan image via trivy and store it in output file:
+```
+# Scan the vulnerability
+trivy image --output /root/python_12.txt public.ecr.aws/docker/library/python:3.12.4
+```
+
+Scan the image and filter only hight severity issue using:
+```
+trivy image --severity HIGH --output /root/python.txt public.ecr.aws/docker/library/python:3.9-bullseye
+```
+command to scan tar file
+```
+trivy image --input alpine.tar --output /root/alpine.json
+```
+command to get output in json format
+
+```
+trivy image --input alpine.tar --format json --output /root/alpine.json
+```
 
 
 
