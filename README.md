@@ -542,6 +542,46 @@ command to get output in json format
 ```
 trivy image --input alpine.tar --format json --output /root/alpine.json
 ```
+## immutability of containers at the runtime
 
+- Check if the pods are running with read-only root and do not use elevated privileges.
+- To confirm from the YAML, look for volume mounts and securityContext settings:
 
+If there's a hostPath or emptyDir mounted at / (which is rare and risky), it could allow writing.
+Check if securityContext has 
+
+privileged: true or 
+allowPrivilegeEscalation: true 
+
+which can give the container elevated permissions, potentially enabling root write access.
+
+> notes: default, containers can write to the filesystem unless explicitly restricted, especially if they run as root.
+         So, unless securityContext restricts this, the container might still have root privileges and can write to /.
+
+to insopect a pod and its reasons of failure:
+```bash
+k logs triton -n alpha
+```
+pod to set emptyDir volume for pod
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    name: triton
+  name: triton
+  namespace: alpha
+spec:
+  containers:
+  - image: httpd
+    name: triton
+    securityContext:
+      readOnlyRootFilesystem: true
+    volumeMounts:
+    - mountPath: /usr/local/apache2/logs
+      name: log-volume
+  volumes:
+  - name: log-volume
+    emptyDir: {}
+```
 
