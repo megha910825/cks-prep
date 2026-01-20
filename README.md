@@ -584,4 +584,78 @@ spec:
   - name: log-volume
     emptyDir: {}
 ```
+## audit log monitor access
+- highest events logged by requestresponse level
+- audit is managed by kube-apiserver via --audit-policy-file and -audit-max-age in kube-apiserver.yaml file
+- sample audit file
+```yaml
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+- level: Metadata
+```
+to get schema of policy:
+```bash
+kubectl explain policy --api-version=audit.k8s.io/v1
+```
+to discover flags in kubernetes
+```
+kube-apiserver --help | grep audit
+kubectl -n kube-system exec -it kube-apiserver-<node-name> -- kube-apiserver --help | grep audit
+```
 
+Now enable auditing in this Kubernetes cluster. Create a new policy file and set it to Metadata level and it will only log events based on the below specifications:
+
+
+Namespace: prod
+
+Operations: delete
+
+Resources: secrets
+
+Log Path: /var/log/prod-secrets.log
+
+Audit file location: /etc/kubernetes/prod-audit.yaml
+
+Maximum days to keep the logs: 30
+
+```
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+- level: Metadata
+  namespaces: ["prod"]
+  verbs: ["delete"]
+  resources:
+  - group: ""
+    resources: ["secrets"]
+```
+Next, make sure to enable logging in api-server:
+```
+ - --audit-policy-file=/etc/kubernetes/prod-audit.yaml
+ - --audit-log-path=/var/log/prod-secrets.log
+ - --audit-log-maxage=30
+```
+Then, add volumes and volume mounts as shown in the below snippets.
+
+volumes:
+```
+  - name: audit
+    hostPath:
+      path: /etc/kubernetes/prod-audit.yaml
+      type: File
+
+  - name: audit-log
+    hostPath:
+      path: /var/log/prod-secrets.log
+      type: FileOrCreate
+```
+volumeMounts:
+```
+  - mountPath: /etc/kubernetes/prod-audit.yaml
+    name: audit
+    readOnly: true
+  - mountPath: /var/log/prod-secrets.log
+    name: audit-log
+    readOnly: false
+```
