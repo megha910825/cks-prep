@@ -659,3 +659,17 @@ volumeMounts:
     name: audit-log
     readOnly: false
 ```
+## falco
+Falco is a cloud native security tool that provides runtime security across hosts, containers, Kubernetes, and cloud environments. It is designed to detect and alert on abnormal behavior and potential security threats in real-time.
+
+- to check if falco is installed
+  ```
+  systemctl status falco
+  ```
+- default falco config file
+  /etc/falco/falco.yaml
+- to check out format check variable json_output in falco.yaml. if it is set to false , means output format is text.
+
+- if same rules is defined in multiple files then the rules that comes last is valid
+- 
+  
