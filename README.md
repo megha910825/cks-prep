@@ -662,6 +662,19 @@ volumeMounts:
 ## falco
 Falco is a cloud native security tool that provides runtime security across hosts, containers, Kubernetes, and cloud environments. It is designed to detect and alert on abnormal behavior and potential security threats in real-time.
 
+To determine if Falco is installed as a daemonset or a package, you can:
+
+Check for a DaemonSet in the kube-system namespace:
+```
+  kubectl get daemonset -n kube-system | grep falco
+```
+
+Or verify if it's installed as a package on the node:
+```
+  systemctl status falco
+```
+
+Since the hint suggests running systemctl status falco, it's likely installed as a package on the control plane node.
 - to check if falco is installed
   ```
   systemctl status falco
