@@ -684,5 +684,17 @@ Since the hint suggests running systemctl status falco, it's likely installed as
 - to check out format check variable json_output in falco.yaml. if it is set to false , means output format is text.
 
 - if same rules is defined in multiple files then the rules that comes last is valid
-- 
+- kubectl get pods -A -o json | jq -r '.items[] | "\(.metadata.namespace),\(.metadata.name)"'
+- kubectl get pods -A -o json | jq '.items[] | {namespace: .metadata.namespace, name: .metadata.name, status: .status.phase}'
+- to reload falco
+```
+ kill -1 $(cat /var/run/falco.pid)
+```
+Other important commands
+```
+ falco -L
+ falco --list
+ falco --list-events
+```
+
   
