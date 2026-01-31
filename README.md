@@ -80,7 +80,34 @@ k certificate deny agent-smith
 k delete csr agent-smith
 ```
 
-     
+##kube-config
+- default kube config location
+/root/.kube/config
+
+- command to view kube config
+```
+k config view
+```
+- command to view custom kube config
+```
+ kubectl config view --kubeconfig my-kube-config
+```
+- command to set another context in kuberntes
+```
+kubectl config use-context
+```
+To use that context, run the command:
+```
+kubectl config --kubeconfig=/root/my-kube-config use-context research
+```
+
+To know the current context, run the command:
+
+```
+kubectl config --kubeconfig=/root/my-kube-config current-context
+```
+export KUBECONFIG=/root/my-kube-config
+
 
 get valid spec fields kubernetes via command line for add sys_time capability
 
