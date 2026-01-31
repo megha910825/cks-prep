@@ -52,7 +52,34 @@ Its a product of aqua security.kube-bench is a tool that checks whether Kubernet
 OpenSSL Syntax: openssl x509 -in file-path.crt -text -noout
 ```
 to get the CA name see the issuer of the certificate
-  
+
+## Certificate API
+- convert csr into base64 format withour widespace
+  ```
+cat akshay.csr | base64 -w 0
+```
+ csr yaml
+```
+---
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: akshay
+spec:
+  groups:
+  - system:authenticated
+  request: <Paste the base64 encoded value of the CSR file>
+  signerName: kubernetes.io/kube-apiserver-client
+  usages:
+  - client auth
+```
+```
+kubectl explain certificatesigningrequest.spec.usages
+k certificate approve akshay
+k certificate deny agent-smith
+k delete csr agent-smith
+```
+
      
 
 get valid spec fields kubernetes via command line for add sys_time capability
