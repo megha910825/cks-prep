@@ -1,7 +1,33 @@
 # cks-prep
 
 ## CIS benchmark:
-CIS: Center of InternetSecurity
+CIS: Center of Internet Security
+command to run assessment report for cis benchmark
+```
+sh /root/Assessor/Assessor-CLI.sh -i  -nts -rd /var/www/html/ -rp index
+```
+## kube-bench:
+Its a product of aqua security.kube-bench is a tool that checks whether Kubernetes is deployed securely by running the checks documented in the CIS Kubernetes Benchmark.
+- install kube bench
+  ```
+  KUBE_BENCH_VERSION=0.10.1
+  curl -L https://github.com/aquasecurity/kube-bench/releases/download/v${KUBE_BENCH_VERSION}/kube-bench_${KUBE_BENCH_VERSION}_linux_amd64.deb -o kube-    bench_${KUBE_BENCH_VERSION}_linux_amd64.deb
+  sudo apt install ./kube-bench_${KUBE_BENCH_VERSION}_linux_amd64.deb -f
+  ```
+- run kube bench against all targets
+  ```
+  kube-bench
+  ```
+- to check specific test on kube-bench
+  ```
+  kube-bench --check="1.3.1"
+  ```
+- run kube-bench for only for target group
+  ```
+  kube-bench run --targets="master"
+  kube-bench run --targets="master,etcd"
+  ```
+  
 
 get valid spec fields kubernetes via command line for add sys_time capability
 
