@@ -80,7 +80,8 @@ k certificate deny agent-smith
 k delete csr agent-smith
 ```
 
-##kube-config
+## Kube-config
+
 - default kube config location
 /root/.kube/config
 
@@ -107,6 +108,11 @@ To know the current context, run the command:
 kubectl config --kubeconfig=/root/my-kube-config current-context
 ```
 export KUBECONFIG=/root/my-kube-config
+
+## Access kube-api server
+
+start kube-proxy
+kubectl proxy --port 8090 &
 
 
 get valid spec fields kubernetes via command line for add sys_time capability
