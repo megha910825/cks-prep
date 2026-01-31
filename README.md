@@ -45,7 +45,13 @@ Its a product of aqua security.kube-bench is a tool that checks whether Kubernet
   ```yaml
   serviceAccountName: dashboard-sa
   ```
-  
+  ## View Certificates
+
+- Common Name (CN) configured on the Kube API Server Certificate?
+```
+OpenSSL Syntax: openssl x509 -in file-path.crt -text -noout
+```
+to get the CA name see the issuer of the certificate
   
      
 
