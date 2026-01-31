@@ -27,7 +27,27 @@ Its a product of aqua security.kube-bench is a tool that checks whether Kubernet
   kube-bench run --targets="master"
   kube-bench run --targets="master,etcd"
   ```
+
+  ## Service Account
+  - create service account with
+    ```
+    k create sa
+    ```
+  - Command to generate the token for dashboard sa(serrvice account)
+    ```
+    kubectl create token dashboard-sa
+  ```
+  - edit deploymen with new sa
+  ```
+  k edit deploymend web-dashboard
+  ```
+  add service account name under template spec of deployment spec section
+  ```yaml
+  serviceAccountName: dashboard-sa
+  ```
   
+  
+     
 
 get valid spec fields kubernetes via command line for add sys_time capability
 
