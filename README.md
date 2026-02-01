@@ -144,8 +144,58 @@ kubeadm token create [random-token-id].[random-secret] --dry-run --print-join-co
 ```
 
 ## Retrieve Service Account token and use it to access API server
+service account token secret yaml. Annotation here in yaml associate this secret with specific service account in annotation.
+create service account and automount service account with associated secret with secrets field as shown here.
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-service-account
+  namespace: default
+secrets:
+  - name: my-service-account-token
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-service-account-token
+  namespace: default
+  annotations:
+    kubernetes.io/service-account.name: "my-service-account"
+type: kubernetes.io/service-account-token
+```
+create role and rolebinidng via command line
+```
+kubectl create role pod-reader --verb=get --verb=list --verb=watch --resource=pods
+kubectl create rolebinding read-pods --role=pod-reader --serviceaccount=default:my-service-account
+```
+verify if the service account have enough rights to read the pods
+```
+kubectl auth can-i list pods --as=system:serviceaccount:default:my-service-account
+```
+to access kube-api server via token and cacertificate
+Get the API Server Endpoint:
+```
+APISERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+```
+Get the CA Certificate:
+```
+CACERT=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.certificate-authority}')
+```
+If the CA certificate is embedded in your kubeconfig, extract it:
+```
+kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode > ca.crt
+```
+Retrieve the Token:
+```
+SECRET_NAME=$(kubectl get serviceaccount my-service-account -o jsonpath='{.secrets[0].name}')
+TOKEN=$(kubectl get secret $SECRET_NAME -o jsonpath='{.data.token}' | base64 --decode)
+```
+Use curl to Access the API Server:
+```
+curl --cacert ca.crt -H "Authorization: Bearer $TOKEN" "$APISERVER/api/v1/namespaces/default/pods"
 
-
+```
 get valid spec fields kubernetes via command line for add sys_time capability
 
 ```
