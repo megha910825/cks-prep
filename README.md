@@ -55,11 +55,11 @@ to get the CA name see the issuer of the certificate
 
 ## Certificate API
 - convert csr into base64 format withour widespace
-  ```
-cat akshay.csr | base64 -w 0
-```
- csr yaml
-```
+    ```
+   cat akshay.csr | base64 -w 0
+   ```
+- sample csr
+```yaml
 ---
 apiVersion: certificates.k8s.io/v1
 kind: CertificateSigningRequest
@@ -73,13 +73,13 @@ spec:
   usages:
   - client auth
 ```
-```
+```bash
 kubectl explain certificatesigningrequest.spec.usages
 k certificate approve akshay
 k certificate deny agent-smith
 k delete csr agent-smith
 ```
-##Kube-config
+## Kube-config
 
 - default kube config location
 /root/.kube/config
@@ -108,7 +108,7 @@ kubectl config --kubeconfig=/root/my-kube-config current-context
 ```
 export KUBECONFIG=/root/my-kube-config
 
-##Access kube-api server
+## Access kube-api server
 
 start kube-proxy
 kubectl proxy --port 8090 &
@@ -142,6 +142,8 @@ On the control plane node, use kubeadm to generate the join command that include
 ```
 kubeadm token create [random-token-id].[random-secret] --dry-run --print-join-command --ttl 2h
 ```
+
+## Retrieve Service Account token and use it to access API server
 
 
 get valid spec fields kubernetes via command line for add sys_time capability
