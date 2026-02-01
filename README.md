@@ -14,7 +14,7 @@ Its a product of aqua security.kube-bench is a tool that checks whether Kubernet
   curl -L https://github.com/aquasecurity/kube-bench/releases/download/v${KUBE_BENCH_VERSION}/kube-bench_${KUBE_BENCH_VERSION}_linux_amd64.deb -o kube-    bench_${KUBE_BENCH_VERSION}_linux_amd64.deb
   sudo apt install ./kube-bench_${KUBE_BENCH_VERSION}_linux_amd64.deb -f
   ```
-- run kube bench against all targets
+- run kube-bench against all targets
   ```
   kube-bench
   ```
@@ -114,7 +114,13 @@ export KUBECONFIG=/root/my-kube-config
 start kube-proxy
 kubectl proxy --port 8090 &
 
+to kill the kubectl proxy process
+```
+pkill -f "kubectl proxy"
+ps aux | grep 'kubectl proxy' | grep "8090"
+kill <process_id>
 
+```
 get valid spec fields kubernetes via command line for add sys_time capability
 
 ```
