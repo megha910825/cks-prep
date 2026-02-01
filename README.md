@@ -79,8 +79,7 @@ k certificate approve akshay
 k certificate deny agent-smith
 k delete csr agent-smith
 ```
-
-## Kube-config
+##Kube-config
 
 - default kube config location
 /root/.kube/config
@@ -109,7 +108,7 @@ kubectl config --kubeconfig=/root/my-kube-config current-context
 ```
 export KUBECONFIG=/root/my-kube-config
 
-## Access kube-api server
+##Access kube-api server
 
 start kube-proxy
 kubectl proxy --port 8090 &
@@ -121,6 +120,30 @@ ps aux | grep 'kubectl proxy' | grep "8090"
 kill <process_id>
 
 ```
+
+## Bootstrap token for authentication:
+Sample yaml
+```yaml
+apiVersion: v1
+data:  auth-extra-groups: c3lzdGVtOmJvb3RzdHJhcHBlcnM6a3ViZWFkbTpkZWZhdWx0LW5vZGUt
+dG9rZW4K
+  token-id: MDc0MDFiCg==
+  token-secret: ZjM5NWFjY2QyNDZhZTUyZAo=
+  usage-bootstrap-authentication: dHJ1ZQ==
+  usage-bootstrap-signing: dHJ1ZQ==
+kind: Secret
+metadata:
+  name: bootstrap-token-07401b
+  namespace: kube-system
+type: bootstrap.kubernetes.io/token
+```
+On the control plane node, use kubeadm to generate the join command that includes a random bootstrap token:
+
+```
+kubeadm token create [random-token-id].[random-secret] --dry-run --print-join-command --ttl 2h
+```
+
+
 get valid spec fields kubernetes via command line for add sys_time capability
 
 ```
