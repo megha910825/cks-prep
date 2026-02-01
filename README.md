@@ -196,6 +196,12 @@ Use curl to Access the API Server:
 curl --cacert ca.crt -H "Authorization: Bearer $TOKEN" "$APISERVER/api/v1/namespaces/default/pods"
 
 ```
+## RBAC
+- to get authorization mode to kube-apiserver check kube-apiserver.yaml manisfest file
+- to get no of roles in all namespaces
+  ```bash
+  k get roles -A --no-headers| wc -l
+  ```
 get valid spec fields kubernetes via command line for add sys_time capability
 
 ```
