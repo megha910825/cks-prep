@@ -202,6 +202,37 @@ curl --cacert ca.crt -H "Authorization: Bearer $TOKEN" "$APISERVER/api/v1/namesp
   ```bash
   k get roles -A --no-headers| wc -l
   ```
+## Clusterrole and Clusterrolebinding
+
+```yaml
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: node-admin
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "watch", "list", "create", "delete"]
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: michelle-binding
+subjects:
+- kind: User
+  name: michelle
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: node-admin
+  apiGroup: rbac.authorization.k8s.io
+```
+to test if michelle has enough permissions:
+```
+kubectl auth can-i list storageclasses --as michelle
+```
 get valid spec fields kubernetes via command line for add sys_time capability
 
 ```
