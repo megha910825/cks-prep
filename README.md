@@ -234,6 +234,10 @@ to test if michelle has enough permissions:
 kubectl auth can-i list storageclasses --as michelle
 ```
 ## ABAC
+- to get apiVersion of any kubernetes object just run this command
+ ```
+  kubectl api-versions
+  ```
 - ABAC file format is one JSON object per line
 - example
   ```jsonl
@@ -244,7 +248,16 @@ kubectl auth can-i list storageclasses --as michelle
   --authorization-policy-file=/path/to/abac-policy.jsonl
   --authorization-mode=Node,RBAC,ABAC
   ```
-  
+```bash
+# Get the secret name
+kubectl get serviceaccount john -o jsonpath='{.secrets[0].name}'
+
+# Retrieve the token
+kubectl get secret john-secret -o jsonpath='{.data.token}' | base64 --decode
+
+# Save the token to a file
+kubectl get secret john-secret -o jsonpath='{.data.token}' | base64 --decode > john-secret.txt
+```
 
 get valid spec fields kubernetes via command line for add sys_time capability
 
