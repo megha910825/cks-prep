@@ -233,6 +233,19 @@ to test if michelle has enough permissions:
 ```
 kubectl auth can-i list storageclasses --as michelle
 ```
+## ABAC
+- ABAC file format is one JSON object per line
+- example
+  ```jsonl
+  {"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"user":"system:serviceaccount:default:john","namespace":"default","resource":"pods","apiGroup":"*","readonly": true }}
+  ```
+  - enable ABAC
+    ```
+  --authorization-policy-file=/path/to/abac-policy.jsonl
+  --authorization-mode=Node,RBAC,ABAC
+  ```
+  
+
 get valid spec fields kubernetes via command line for add sys_time capability
 
 ```
