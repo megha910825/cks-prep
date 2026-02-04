@@ -293,18 +293,23 @@ kubectl get secret john-secret -o jsonpath='{.data.token}' | base64 --decode > j
   ```
   ps -aux|grep proxy
   kill -1 13421
-```
+  ```
 - command can forward a local port to a port on the Pod ?
-kubectl port-forward
+  ```
+  kubectl port-forward
+  ```
 - command to forward port 8000 on the host to port 5000 on the pod app?
+
 ```
  # Listen on port 8888 on all addresses, forwarding to 5000 in the pod
   kubectl port-forward  pod/mypod 8888:5000
-  ```
-- We deployed nginx app in default namespace. Wait few seconds for pod to spinup.Forward port 8005 of localhost to port 80 of nginx pods. Run port-forward process in background.Try accessing port 8005 after port forwarding.
 ```
-k port-forward deployments/nginx 8005:80 &
-curl localhost:5000
+
+- We deployed nginx app in default namespace. Wait few seconds for pod to spinup.Forward port 8005 of localhost to port 80 of nginx pods. Run port-forward process in background.Try accessing port 8005 after port forwarding.
+
+```
+   k port-forward deployments/nginx 8005:80 &
+   curl localhost:5000
 ```
   
 get valid spec fields kubernetes via command line for add sys_time capability
