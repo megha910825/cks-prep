@@ -27,8 +27,7 @@ Its a product of aqua security.kube-bench is a tool that checks whether Kubernet
   kube-bench run --targets="master"
   kube-bench run --targets="master,etcd"
   ```
-
-  ## Service Account
+## Service Account
   - create service account with
     ```
     k create sa
@@ -45,7 +44,7 @@ Its a product of aqua security.kube-bench is a tool that checks whether Kubernet
   ```yaml
   serviceAccountName: dashboard-sa
   ```
-  ## View Certificates
+## View Certificates
 
 - Common Name (CN) configured on the Kube API Server Certificate?
 ```
@@ -258,7 +257,56 @@ kubectl get secret john-secret -o jsonpath='{.data.token}' | base64 --decode
 # Save the token to a file
 kubectl get secret john-secret -o jsonpath='{.data.token}' | base64 --decode > john-secret.txt
 ```
+## Kubelet-Security:
+- To get the kubelet configuration file
+  ```
+  ps -aux|grep kubelet
+  ```
+- to get particular value in kubelet configuration file
+  ```
+  cat /var/lib/kubelet/config.yaml|grep rotateCertificates
+  ```
+- kubelet full access at 10250 port and read only access at 10255
 
+- to check kubelet allow requests for anonymous users?check kubelet config file and see if anonmymous is enabled or not
+  ```
+  authentication:
+  anonymous:
+    enabled: true
+  ```
+- to check kind of authorization enabled at kubelet, check kubelet config file again
+- call the pod apis using curl -sk https://localhost:10250/pods
+- restart kubelet after any change in kubelet config file using systemctl restart kubelet
+- to check metrics on readOnlyPort with curl -sk http://localhost:10255/metrics
+- to disable the metrics on readonlyport set property readOnlyPort to 0 in kubelet config file and restart kubelet
+
+## Kubectl proxy and forward
+- to start kubectl proxy on default port
+  ```
+  kubectl proxy &
+  ```
+- Call the API endpoint /version of kubectl proxy using curl and redirect the output to the file: /root/kube-proxy-version.json
+  ```
+  curl 127.0.0.1:8001/version > /root/kube-proxy-version.json
+  ```
+- to kill running kubectl proxy process
+  ```
+  ps -aux|grep proxy
+  kill -1 13421
+```
+- command can forward a local port to a port on the Pod ?
+kubectl port-forward
+- command to forward port 8000 on the host to port 5000 on the pod app?
+```
+ # Listen on port 8888 on all addresses, forwarding to 5000 in the pod
+  kubectl port-forward  pod/mypod 8888:5000
+  ```
+- We deployed nginx app in default namespace. Wait few seconds for pod to spinup.Forward port 8005 of localhost to port 80 of nginx pods. Run port-forward process in background.Try accessing port 8005 after port forwarding.
+```
+k port-forward deployments/nginx 8005:80 &
+curl localhost:5000
+```
+  
 get valid spec fields kubernetes via command line for add sys_time capability
 
 ```
