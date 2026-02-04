@@ -445,7 +445,11 @@ spec:
     - port: 53
       protocol: TCP
 ```
-
+## Ingress
+- to get the ingress resources in all namespaces
+  ```
+  kubectl get ingress --all-namespaces
+  ```
 ```
 kubectl explain pod.spec
 kubectlkubectl explain pod.spec.containers.securityContext
