@@ -350,6 +350,63 @@ OR
   ```
 get valid spec fields kubernetes via command line for add sys_time capability
 
+## Kubeadm Cluster Upgrade
+- to make the node unschedulable(scheduling disabled)
+  ```
+  kubectl cordon controlplane
+  ```
+- to check the latest available version for upgrade
+  ```
+  kubeadm upgrade plan
+  ```
+- Step 1: Update the repository with new version:
+  ```
+  pager /etc/apt/sources.list.d/kubernetes.list
+  deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /
+  ```
+  
+- Step:2 to determine the latest patch release for Kubernetes 1.34 using the OS package manager:
+  ````
+  sudo apt-update
+  sudo apt-cache madison kubeadm
+  ```
+- Step 3: Upgrade controlplane node
+  ```
+    sudo apt-mark unhold kubeadm && \
+    sudo apt-get update && sudo apt-get install -y kubeadm='1.34.0-1.1' && \
+    sudo apt-mark hold kubeadm
+  ```
+- Step 4: Check the Kubeadm version
+  ```
+  kubeadm version
+  ```
+- Step 5: Verify the upgrade plan
+  ```
+  sudo kubeadm upgrade plan
+  ```
+- Step 6: run the upgrade
+  ```
+    sudo kubeadm upgrade apply v1.34.0
+  ```
+- Step 7: Upgrade the kubelet and kubectl
+  ```
+  sudo apt-mark unhold kubelet kubectl && \
+  sudo apt-get update && sudo apt-get install -y kubelet='1.34.0-1.1' kubectl='1.34.0-1.1' && \
+  sudo apt-mark hold kubelet kubectl
+  ```
+- Step 8: retart the kubelet
+  ```
+    sudo systemctl daemon-reload
+    sudo systemctl restart kubelet
+  ```
+- Step 9: UnCordon the node
+  ```
+    kubectl uncordon controlplane
+  ```
+- Step 10: Upgrade worker nodes
+  same as controlplane
+
+
 ```
 kubectl explain pod.spec
 kubectlkubectl explain pod.spec.containers.securityContext
