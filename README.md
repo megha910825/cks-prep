@@ -311,7 +311,43 @@ kubectl get secret john-secret -o jsonpath='{.data.token}' | base64 --decode > j
    k port-forward deployments/nginx 8005:80 &
    curl localhost:5000
 ```
-  
+
+First get all resource names for nginx using the command:
+```
+ kubectl get all
+```
+Run any of below commands with valid names
+```
+kubectl port-forward pods/{POD_NAME} 8005:80 &
+```
+OR
+```
+kubectl port-forward deployment/{DEPLOYMENT_NAME} 8005:80 &
+```
+OR
+```
+kubectl port-forward service/{SERVICE_NAME} 8005:80 &
+```
+OR
+```
+   kubectl port-forward replicaset/{REPLICASET_NAME} 8005:80 &
+```
+
+- then try curl localhost:8005 to check nginx response
+-  kubectl proxy - Opens proxy port to API server
+
+- kubectl port-forward - Opens port to target deployment pods
+
+## Verify Platform Binaries
+
+- to download kubernetes binaries to specific folder
+  ```
+  wget -O /opt/kubernetes.tar.gz https://dl.k8s.io/v1.34.1/kubernetes.tar.gz
+  ```
+- to get shassum512 of the binary file
+  ```
+  sha512sum kubernetes.tar.gz
+  ```
 get valid spec fields kubernetes via command line for add sys_time capability
 
 ```
