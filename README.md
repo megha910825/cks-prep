@@ -455,6 +455,52 @@ spec:
   ```
   kubectl create ingress app-ingress -n app-space --rule="/wear=wear-service:8080" --rule="/watch=video-service:8080" --annotation nginx.ingress.kubernetes.io/rewrite-target=/ --dry-run=client -o yaml > ingress-resource.yaml
   ```
+
+## Implementing node metadata protection:
+- Create a NetworkPolicy named deny-metadata in the default namespace that denies egress traffic from the app pod to the AWS Metadata Service running at <controlplane-ip>:9999.
+
+The NetworkPolicy should:
+
+Select the app pod (using appropriate labels).
+Deny egress traffic to controlplane IP.
+Allow all other egress traffic.
+Use a YAML manifest to create the NetworkPolicy.
+
+
+Note:
+To get the IP of controlplane, run the following command:
+Get the IP address of the controlplane node:
+```
+CONTROLPLANE_IP=$(kubectl get node controlplane -o jsonpath="{.status.addresses[0].address}")
+echo $CONTROLPLANE_IP
+```
+Create a YAML file named deny-metadata.yaml with the following content:
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-metadata
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: app
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - <controlplane-ip>/32 # Replace with the actual IP address of the controlplane node
+```
+
+Apply the manifest:
+```bash
+kubectl apply -f deny-metadata.yaml
+```
+This NetworkPolicy allows egress traffic to all destinations except for the controlplane IP address where the AWS Metadata Service is running.
+
 ```
 kubectl explain pod.spec
 kubectlkubectl explain pod.spec.containers.securityContext
