@@ -450,6 +450,11 @@ spec:
   ```
   kubectl get ingress --all-namespaces
   ```
+
+- command to create ingress resource via command line
+  ```
+  kubectl create ingress app-ingress -n app-space --rule="/wear=wear-service:8080" --rule="/watch=video-service:8080" --annotation nginx.ingress.kubernetes.io/rewrite-target=/ --dry-run=client -o yaml > ingress-resource.yaml
+  ```
 ```
 kubectl explain pod.spec
 kubectlkubectl explain pod.spec.containers.securityContext
