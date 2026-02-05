@@ -501,6 +501,15 @@ kubectl apply -f deny-metadata.yaml
 ```
 This NetworkPolicy allows egress traffic to all destinations except for the controlplane IP address where the AWS Metadata Service is running.
 
+## Setting Access Controls for Node Metadata via RBAC
+- command to create cluster roles
+  ```
+  kubectl create clusterrole node-viewer --verb=get,list,watch --resource=nodes
+  ```
+- access curl inside the pod using:
+  ```
+  kubectl exec -it api-test-pod -n default -- /bin/bash -c 'curl -k https://kubernetes.default.svc/api/v1/nodes -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"'
+  ```
 ```
 kubectl explain pod.spec
 kubectlkubectl explain pod.spec.containers.securityContext
