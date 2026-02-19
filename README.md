@@ -459,6 +459,18 @@ spec:
   ```
   kubectl annotate ingress web-app-ingress -n webapp nginx.ingress.kubernetes.io/ssl-redirect="true"
   ```
+- Verify the complete Ingress configuration. The Ingress should route traffic for app.kodekloud.local to the web-app Service, with TLS termination using app-tls and HTTP to HTTPS redirect enabled.
+
+Check the Ingress details:
+```
+kubectl -n webapp get ingress
+kubectl -n webapp describe ingress web-app-ingress
+```
+
+You can test the Ingress configuration with:
+```
+curl -Lk https://app.kodekloud.local
+```
 
 ## Implementing node metadata protection:
 - Create a NetworkPolicy named deny-metadata in the default namespace that denies egress traffic from the app pod to the AWS Metadata Service running at <controlplane-ip>:9999.
