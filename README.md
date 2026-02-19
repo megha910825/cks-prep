@@ -455,6 +455,10 @@ spec:
   ```
   kubectl create ingress app-ingress -n app-space --rule="/wear=wear-service:8080" --rule="/watch=video-service:8080" --annotation nginx.ingress.kubernetes.io/rewrite-target=/ --dry-run=client -o yaml > ingress-resource.yaml
   ```
+- to annotate existing ingress
+  ```
+  kubectl annotate ingress web-app-ingress -n webapp nginx.ingress.kubernetes.io/ssl-redirect="true"
+  ```
 
 ## Implementing node metadata protection:
 - Create a NetworkPolicy named deny-metadata in the default namespace that denies egress traffic from the app pod to the AWS Metadata Service running at <controlplane-ip>:9999.
