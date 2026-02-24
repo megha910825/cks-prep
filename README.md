@@ -557,7 +557,58 @@ This NetworkPolicy allows egress traffic to all destinations except for the cont
   ```
   useradd sam -d /opt/sam -s /bin/bash -u 2328 -G admin
   ```
+
+  ## SSH hardening with sudo
+  - default scp port 22
+  - to provide private key while ssh login we can use ssh -i command to pass private key
+  - different authentication method is available to login to ssh  such as via public key authentication, password based authentication and None
+  - to enable passwordless authentication to node01(Create a user named jim on node01 host and configure password-less ssh access from controlplane host (from user root) to node01 host (to user jim).)
+    ```
+    ssh into node01 host from controlplane host
+    ssh node01
+
+    Create user jim on node01 host
+    adduser jim (set any password you like)
+
+    Return back to controlplane host and copy ssh public key
+    ssh-copy-id -i ~/.ssh/id_rsa.pub jim@node01
+
+    Test ssh access from controlplane host
+    ssh jim@node01
+    ```
+- to make jim a sudo user
+    On node01 host, open /etc/sudoers file using any editor like vi and add an entry for user jim and forcefully save the file.
+    ```
+     jim    ALL=(ALL:ALL) ALL
+   ```
+- to make jim to run sudo without entering password
+  ```
+  jim  ALL=(ALL) NOPASSWD:ALL
+  ```
+- to make user a member of admin group without changing sudoers file
+  ```
+  usermod rob -G admin
+  ```
+- There is some issue with sudo on node01 host, as user rob is not able to run sudo commands, investigate and fix this issue.
+  Password for user rob that we set in the previous question: jid345kjf
+
+  ```
+  node01 ~ ➜  sudo su -
+  node01 ~ ➜  su rob
+  \[\]node01\[\] \[\]~\[\] \[\]➜\[\]  sudo apt-get update
+   [sudo] password for rob: 
+   rob is not in the sudoers file.  This incident will be reported.
+   sudo visudo
+   %admin ALL=(ALL) ALL
+
 ```
+- to disable ssh root login and disable password authentication for ssh on node01 host,default location of sshd config /etc/ssh/sshd_config
+```
+PermitRootLogin No
+PasswordAuthentication No
+```
+- restart sshd service
+
 kubectl explain pod.spec
 kubectlkubectl explain pod.spec.containers.securityContext
 kubectl explain pod.spec.containers.securityContext.capabilities
