@@ -526,6 +526,37 @@ This NetworkPolicy allows egress traffic to all destinations except for the cont
   ```
   kubectl exec -it api-test-pod -n default -- /bin/bash -c 'curl -k https://kubernetes.default.svc/api/v1/nodes -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"'
   ```
+# System Hardening
+
+## Limit Node Access
+- command to list id of user
+  ```
+  id
+  ```
+- command to list information of existing user
+  ```
+  cat /etc/passwd | grep mail
+  ```
+- command to change password of user
+  ```
+  passwd david
+  ```
+- command to delete user name ray
+  ```
+  deluser ray
+  ```
+- command to delete group
+  ```
+  delgroup devs
+  ```
+- command to modify shell for user
+  ```
+  usermod himanshi -s /usr/sbin/nologin
+  ```
+- Create a user named sam on the controlplane host. The user's home directory must be /opt/sam. Login shell must be /bin/bash and uid must be 2328. Make sam a member of the admin group.
+  ```
+  useradd sam -d /opt/sam -s /bin/bash -u 2328 -G admin
+  ```
 ```
 kubectl explain pod.spec
 kubectlkubectl explain pod.spec.containers.securityContext
