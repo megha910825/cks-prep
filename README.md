@@ -607,8 +607,9 @@ This NetworkPolicy allows egress traffic to all destinations except for the cont
 PermitRootLogin No
 PasswordAuthentication No
 ```
-- restart sshd service
 
+- restart sshd service
+```
 kubectl explain pod.spec
 kubectlkubectl explain pod.spec.containers.securityContext
 kubectl explain pod.spec.containers.securityContext.capabilities
