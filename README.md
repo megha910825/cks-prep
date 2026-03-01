@@ -591,7 +591,6 @@ This NetworkPolicy allows egress traffic to all destinations except for the cont
   ```
 - There is some issue with sudo on node01 host, as user rob is not able to run sudo commands, investigate and fix this issue.
   Password for user rob that we set in the previous question: jid345kjf
-
   ```
   node01 ~ ➜  sudo su -
   node01 ~ ➜  su rob
@@ -600,15 +599,53 @@ This NetworkPolicy allows egress traffic to all destinations except for the cont
    rob is not in the sudoers file.  This incident will be reported.
    sudo visudo
    %admin ALL=(ALL) ALL
-
 ```
 - to disable ssh root login and disable password authentication for ssh on node01 host,default location of sshd config /etc/ssh/sshd_config
 ```
 PermitRootLogin No
 PasswordAuthentication No
 ```
-
 - restart sshd service
+
+##Identify open ports, remove packages services
+-  commands to list all installed packages on an ubuntu system
+```
+apt list --installed
+```
+- commands to list only active services on a system, here systemctl list-units will already listing active units only.
+```
+systemctl list-units --type service
+```
+- command to list the kernel modules currently loaded on a system?
+```
+lsmod
+```
+- On the controlplane host, we have nginx service running which isn't needed on that system. Stop the nginx service and remove its service unit file. Make sure not to remove nginx package from the system.
+```
+systemctl list-units --all | grep nginx
+systemctl stop nginx
+systemctl status nginx
+rm /lib/systemd/system/nginx.service
+```
+- to blacklist the evbug kernel module on controlplane host.
+```
+vim /etc/modprobe.d/blacklist.conf file 
+blacklist evbug
+```
+- to remove nginx package
+```
+apt remove nginx -y
+```
+We have a service running on controlplane host which is listening on port 9090. Identify the service and stop the same to free the 9090 port.
+
+```
+netstat -natp  | grep 9090
+systemctl stop apache2
+```
+- We have the wget package version v1.18 installed on the host controlplane. There were issues reported with the current version of wget. Please check for updates available for this package and update to the latest version available in the apt repos.
+```
+apt install wget -y
+```
 ```
 kubectl explain pod.spec
 kubectlkubectl explain pod.spec.containers.securityContext
