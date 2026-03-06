@@ -1,5 +1,3 @@
-# cks-prep
-
 # System Hardening
 
 ## Limit Node Access
