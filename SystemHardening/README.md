@@ -108,5 +108,26 @@
       vim /etc/modprobe.d/blacklist.conf file 
       blacklist evbug
   ```
+- command to remove nginx package from ubuntu system
+  ```
+  apt remove nginx
+  ```
+- command to know ehich service is running on which port
+  ```
+    netstat -plnt|grep 9090
+  ```
+- command to stop apache2 service
+  ```
+    systemctl stop apache2
+  ```
+- command to update system packages
+  ```
+    apt-get update
+  ```
+- command to install wget package
+  ```
+    apt install wget -y
+  ```  
+
 
   
