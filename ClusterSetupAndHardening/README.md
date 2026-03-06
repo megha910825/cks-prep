@@ -1,5 +1,3 @@
-# cks-prep
-
 ## CIS benchmark:
 CIS: Center of Internet Security
 command to run assessment report for cis benchmark
