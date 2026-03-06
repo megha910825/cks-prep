@@ -74,38 +74,41 @@
    rob is not in the sudoers file.  This incident will be reported.
    sudo visudo
    %admin ALL=(ALL) ALL
-```
+   ```
+  
 - to disable ssh root login and disable password authentication for ssh on node01 host,default location of sshd config /etc/ssh/sshd_config
-```
-PermitRootLogin No
-PasswordAuthentication No
-```
+  
+  ```
+    PermitRootLogin No
+    PasswordAuthentication No
+  ```
 - restart sshd service
+- 
+## Identify open ports, remove packages services
 
-##Identify open ports, remove packages services
 -  commands to list all installed packages on an ubuntu system
-```
-apt list --installed
-```
+  ```
+   apt list --installed
+  ```
 - commands to list only active services on a system, here systemctl list-units will already listing active units only.
-```
-systemctl list-units --type service
-```
+  ```
+    systemctl list-units --type service
+  ```
 - command to list the kernel modules currently loaded on a system?
-```
-lsmod
-```
+  ```
+    lsmod
+  ```
 - On the controlplane host, we have nginx service running which isn't needed on that system. Stop the nginx service and remove its service unit file. Make sure not to remove nginx package from the system.
-```
-systemctl list-units --all | grep nginx
-systemctl stop nginx
-systemctl status nginx
-rm /lib/systemd/system/nginx.service
-```
+  ```
+    systemctl list-units --all | grep nginx
+    systemctl stop nginx
+    systemctl status nginx
+    rm /lib/systemd/system/nginx.service
+  ```
 - to blacklist the evbug kernel module on controlplane host.
-```
-vim /etc/modprobe.d/blacklist.conf file 
-blacklist evbug
-```
+  ```
+      vim /etc/modprobe.d/blacklist.conf file 
+      blacklist evbug
+  ```
 
   
