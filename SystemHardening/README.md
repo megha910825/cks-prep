@@ -83,7 +83,7 @@
     PasswordAuthentication No
   ```
 - restart sshd service
-- 
+  
 ## Identify open ports, remove packages services
 
 -  commands to list all installed packages on an ubuntu system
