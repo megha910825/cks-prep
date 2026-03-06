@@ -127,7 +127,77 @@
 - command to install wget package
   ```
     apt install wget -y
-  ```  
+  ```
+## UFW Firewall
+- command to know status of ufw tool on the nodes?
+  ```
+    ufw status
+  ```
+- commands to display the rules along with rule numbers next to each rule
+  ```
+    ufw status numbered
+  ```
+- command to allow a tcp port range between 1000 and 2000 in ufw?
+  ```
+    ufw allow 1000:2000/tcp
+  ```
+- command to reset ufw rules to their default settings?
+  ```
+    ufw reset
+  ```
+- command to to allow incoming SSH connections
+  ```
+    ufw allow 22/tcp
+  ```
+- command to allow incoming connection on these ports from IP range 135.22.65.0/24 to any interface.
+  ```
+    ufw allow from 135.22.65.0/24 to any port 22 proto tcp
+  ```
+- command to enable ufw firewall
+  ```
+    ufw enable
+  ```
+- command to disable all incoming connection on port 80
+  ```
+  ufw deny to any port 80 proto tcp
+  ```
+- command to disable firewall
+  ```
+    ufw disable
+  ```
+## Seccomp
+- commands/tools can be used to trace syscalls
+ ```
+   strace
+```
+- command to get all syscall made by command ls /root
+  ```
+    strace ls /root
+  ```
+- This profile has the default action of SCMP_ACT_ERRNO that blocks all syscalls by default. The syscalls to be allowed are part of the whitelist. This is an example of a whitelist type profile.
+- default location of seccomp profile /var/lib/kubelet/seccomp
+- Create a new pod called audit-nginx using the nginx image and make use of the audit.json seccomp profile in the pod's security context.
+  The audit.json file is already present in the default seccomp profile path in the controlplane node.
+
+  ```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: nginx
+  name: audit-nginx
+spec:
+  securityContext:
+    seccompProfile:
+      type: Localhost
+      localhostProfile: profiles/audit.json
+  containers:
+  - image: nginx
+    name: nginx
+  ```
+
+  
+
 
 
   
