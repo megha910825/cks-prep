@@ -167,9 +167,9 @@
   ```
 ## Seccomp
 - commands/tools can be used to trace syscalls
- ```
+  ```
    strace
-```
+ ```
 - command to get all syscall made by command ls /root
   ```
     strace ls /root
@@ -180,23 +180,31 @@
   The audit.json file is already present in the default seccomp profile path in the controlplane node.
 
   ```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    run: nginx
-  name: audit-nginx
-spec:
-  securityContext:
-    seccompProfile:
-      type: Localhost
-      localhostProfile: profiles/audit.json
-  containers:
-  - image: nginx
-    name: nginx
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        labels:
+          run: nginx
+        name: audit-nginx
+      spec:
+        securityContext:
+          seccompProfile:
+            type: Localhost
+            localhostProfile: profiles/audit.json
+        containers:
+        - image: nginx
+          name: nginx
   ```
 
-  
+## AppArmour
+
+- to know current status of apparmour state. commad is aa-status. Since here aa-status shows taht all profiles are loaded and in enforced, indicating apparmour is full active and stable machinge the GA(
+  generally Available) status/
+- default location of apparmour profiles are /etc/apparmour.d/
+- to enforce a profile
+  ```
+    apparmor_parser -q /etc/apparmor.d/usr.sbin.nginx
+  ```
 
 
 
