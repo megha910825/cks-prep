@@ -233,4 +233,27 @@ plugins:
 
 then enforced: bseline and restricted is auditing and warning
 
-- 
+## OPA
+
+- OPA stands for Open Policy Agent
+- to download and install opa
+```
+curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
+chmod 755 ./opa
+opa version
+```
+- to run opa
+```
+./opa run -s &
+```
+- default port on which opa runs is 8181
+- rego language is used to write opa policies
+- to test a policy in opa 
+```
+./opa test example.rego
+```
+
+- to load a policy in opa
+```
+curl -X PUT --data-binary @file.rego http://localhost:8181/v1/policies/policyname
+```
