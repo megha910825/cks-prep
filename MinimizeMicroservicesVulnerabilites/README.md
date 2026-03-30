@@ -102,3 +102,29 @@ Add to volumeMounts:
 ```
 kubectl get pods -n kube-system
 ```
+## Validating and Mutating Admission Controllers
+- namespace exists - validatíng admission controller
+- namespaceautoprovision - mutating admission controller
+- flow of invocation of admission controllers?
+  In Kubernetes, admission controllers are plugins that intercept requests to the API server before they are persisted. They help enforce policies or modify requests.
+
+The flow of invocation is:
+
+Mutating admission controllers: They can modify the incoming request (like adding labels or changing configurations).
+Validating admission controllers: They check if the request complies with policies without modifying it.
+So, the correct flow is: First Mutating, then Validating. This order ensures that any necessary modifications are made before validation checks are performed.
+
+- Create a TLS secret named webhook-server-tls in the webhook-demo namespace.
+
+This secret will be used by the admission webhook server for secure communication over HTTPS.
+
+
+We have already created below cert and key for webhook server which should be used to create secret.
+
+Certificate : /root/keys/webhook-server-tls.crt
+
+Key : /root/keys/webhook-server-tls.key
+
+```
+k create secret tls webhook-server-tls --cert=/root/keys/webhook-server-tls.crt --key=/root/keys/webhook-server-tls.key -n webhook-demo
+```
