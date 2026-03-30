@@ -128,3 +128,109 @@ Key : /root/keys/webhook-server-tls.key
 ```
 k create secret tls webhook-server-tls --cert=/root/keys/webhook-server-tls.crt --key=/root/keys/webhook-server-tls.key -n webhook-demo
 ```
+
+## Pod Security Admission
+
+- By default, PodSecurity admission is enabled in your cluster. To verify this configuration, you can use the following command:
+```
+  kubectl exec -n kube-system kube-apiserver-controlplane \
+-- kube-apiserver -h | grep enable-admission
+```
+
+- We want to apply pod security on namespace alpha. To achieve that, add the following label to the namespace alpha .
+```
+pod-security.kubernetes.io/warn=baseline
+```
+```
+k label ns alpha pod-security.kubernetes.io/warn=baseline
+```
+
+- ```
+cat baseline-pod.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: baseline-pod
+  namespace: alpha
+spec:
+  containers:
+  - image: nginx
+    name: baseline-pod
+    securityContext:
+       privileged: true
+```
+- While applying the manifest baseline-pod.yaml in the preceding question, you would have encountered a warning message that stated:
+
+Warning: would violate PodSecurity "baseline:latest": 
+privileged (container "baseline-pod" must not set securityContext.privileged=true)
+
+In the previous task, the label pod-security.kubernetes.io/warn=baseline was applied to the namespace alpha. Within the pod definition file, the securityContext.privileged=true was specified. Therefore, since the Baseline level does not permit privileged containers, a warning was generated.
+
+For more information on the various levels of Pod Security, you can refer to the Kubernetes documentation on Pod Security Standards, bookmarked as PSP Documentation above the terminal pane.
+
+- We can also use multiple pod security standards together for a single namespace.
+
+For this step, label the namespace beta with the enforce mode and baseline level, as well as the warn mode and the restricted level.
+
+```
+kubectl label ns beta \
+pod-security.kubernetes.io/enforce=baseline \
+pod-security.kubernetes.io/warn=restricted
+```
+- We have provided a manifest multi-psa.yaml at the /root location of the lab terminal.
+
+Inspect it and create the pod using the manifest in the beta namespace.
+
+
+Note: You might see some warnings while applying manifest. It is expected.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-psa
+  namespace: beta
+spec:
+  containers:
+  - name: multi-psa
+    image: nginx
+    securityContext:
+      runAsUser: 0
+```
+```bash
+kubectl apply -f /root/multi-psa.yaml 
+```
+- While applying the manifest multi-psa.yaml in the previous question, you would have seen a warning message as follows:
+
+Warning: would violate PodSecurity "restricted:latest": allowPrivilegeEscalation != false (container "multi-psa" must set securityContext.allowPrivilegeEscalation=false), 
+unrestricted capabilities (container "multi-psa" must set securityContext.capabilities.drop=["ALL"]), runAsNonRoot != true (pod or container "multi-psa" must set securityContext.runAsNonRoot=true), 
+runAsUser=0 (container "multi-psa" must not set runAsUser=0), seccompProfile (pod or container "multi-psa" must set securityContext.seccompProfile.type to "RuntimeDefault" or "Localhost")
+
+Pod will be created as it does not violate the baseline security standard but it does violate the restricted standard.
+
+Also, it will be created despite violating the restricted standard because the restricted standard is in warn mode. In this mode, although the pod does not adhere to the restricted standard, it is allowed to be created, and a warning message is issued during the pod creation process.
+
+- if following is the yaml admission-configuration file
+```yaml
+kind: AdmissionConfiguration
+plugins:
+  - name: PodSecurity
+    configuration:
+      apiVersion: pod-security.admission.config.k8s.io/v1
+      kind: PodSecurityConfiguration
+      defaults:
+        enforce: baseline
+        enforce-version: latest
+        audit: restricted
+        audit-version: latest
+        warn: restricted
+        warn-version: latest
+      exemptions:
+        usernames: [] 
+        runtimeClassNames: [] 
+        namespaces: [my-namespace]  
+```
+
+then enforced: bseline and restricted is auditing and warning
+
+- 
