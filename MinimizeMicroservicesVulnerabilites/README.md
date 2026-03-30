@@ -257,3 +257,13 @@ opa version
 ```
 curl -X PUT --data-binary @file.rego http://localhost:8181/v1/policies/policyname
 ```
+
+## kube-mgmt
+
+- What needs to be done to enable kube-mgmt to automatically identify policies defined in kubernetes and load them into OPA?
+
+  create configmaps in kubernetes with label opa
+- create configmap with file as follows:
+```
+k create cm untrusted-registry --from-file=untrusted-registry.rego
+```
