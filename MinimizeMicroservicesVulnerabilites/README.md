@@ -267,3 +267,76 @@ curl -X PUT --data-binary @file.rego http://localhost:8181/v1/policies/policynam
 ```
 k create cm untrusted-registry --from-file=untrusted-registry.rego
 ```
+## OPA Gatekeeper
+
+- deploy gatekeeper as follows:
+```
+kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/v3.22.0/deploy/gatekeeper.yaml
+```
+- Create a pod alpha in namespace engineering with label tech: web using nginx image
+
+```
+k run alpha -n engineering --image=nginx -l=tech=web
+```
+
+- sample constraint template
+```yaml
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredlabels
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredLabels
+      validation:
+        # Schema for the `parameters` field
+        openAPIV3Schema:
+          type: object
+          properties:
+            labels:
+              type: array
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredlabels
+
+        violation[{"msg": msg, "details": {"missing_labels": missing}}] {
+          provided := {label | input.review.object.metadata.labels[label]}
+          required := {label | label := input.parameters.labels[_]}
+          missing := required - provided
+          count(missing) > 0
+          msg := sprintf("you must provide labels: %v", [missing])
+        }
+```
+- sample constraint
+```yaml
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredLabels
+metadata:
+  name: require-tech-label
+spec:
+  match:
+    namespaces: ["engineering"]
+  parameters:
+    labels: ["tech"]
+```
+To create ConstraintTemplate k8sreplicalimits, use the provided manifest.
+kubectl apply -f k8sreplicalimits.yaml
+Once, the template is created, create a Constraint k8sreplicalimits that will use the ConstraintTemplate k8sreplicalimits. You can use the following manifest to enforce the replica limits.
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sReplicaLimits
+metadata:
+  name: replica-limits
+spec:
+  match:
+    kinds:
+      - apiGroups: ["apps"]
+        kinds: ["Deployment"]
+  parameters:
+    ranges:
+    - min_replicas: 2
+      max_replicas: 5
