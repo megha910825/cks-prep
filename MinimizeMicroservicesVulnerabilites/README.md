@@ -370,3 +370,54 @@ spec:
     - secretRef:
         name: db-secret
 ```
+
+## Using Runtimes in Kubernetes
+- Which is the default runtime used by this cluster?
+
+   First inspect the runtime used by the kubernetes cluster.
+   to get the runtime of kubernetes cluster:
+   ```
+   k get nodes -o wide
+   crictl ps
+   crictl inspect --output json 956dbb686804d | grep runtime
+   ```
+- to get the information of different runtimeclases
+  ```
+  k get runtimeclasses
+  ```
+- What is the handler used by the runtime class called gvisor?
+  ```
+    k describe runtimeclass gvisor
+  ```
+- Create a new runtime class called secure-runtime with the following specs:
+
+
+Name: secure-runtime
+
+Handler: runsc
+```yaml
+   apiVersion: node.k8s.io/v1
+   handler: runsc
+   kind: RuntimeClass
+   metadata:
+     name: secure-runtime
+```
+-A pod definition file is provided at /root/simple-webapp-1.yaml. Update this file with the runtime class that we just created in the previous step.
+
+
+runtimeClassName: secure-runtime
+```yaml
+  apiVersion: v1
+kind: Pod
+metadata:
+    name: simple-webapp-1
+    labels:
+        name: simple-webapp
+spec:
+   runtimeClassName: secure-runtime
+   containers:
+     - name: simple-webapp
+       image: kodekloud/webapp-delayed-start
+       ports:
+        - containerPort: 8080
+```
