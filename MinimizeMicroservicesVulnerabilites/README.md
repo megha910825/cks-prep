@@ -340,3 +340,33 @@ spec:
     ranges:
     - min_replicas: 2
       max_replicas: 5
+
+## Manage Kubernetes secret
+- create generic secret
+  ```
+  k create secret generic db-secret --from-literal=DB_Host=sql01 --from-literal=DB_User=root --from-literal=DB_Password=password123
+  ```
+- Configure the webapp-pod to load environment variables from the db-secret secret you created in the previous task.
+
+
+Note:
+
+Use envFrom with secretRef to load ALL secret keys as environment variables
+The pod must be deleted and recreated (environment variables cannot be updated on running pods)
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-pod
+  labels:
+    name: webapp-pod
+  namespace: default
+spec:
+  containers:
+  - name: webapp
+    image: kodekloud/simple-webapp-mysql
+    imagePullPolicy: Always
+    envFrom:
+    - secretRef:
+        name: db-secret
+```
