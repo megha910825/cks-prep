@@ -403,8 +403,6 @@ Handler: runsc
      name: secure-runtime
 ```
 -A pod definition file is provided at /root/simple-webapp-1.yaml. Update this file with the runtime class that we just created in the previous step.
-
-
 runtimeClassName: secure-runtime
 ```yaml
   apiVersion: v1
@@ -421,3 +419,89 @@ spec:
        ports:
         - containerPort: 8080
 ```
+## Implementing Resource Quotas in Kubernetes
+
+-Define and Apply a Resource Quota for Team A
+There is a new team in the organization team-a which requires a resource quota to limit the resource usage within their namespace.
+
+This will help to ensure that the team does not consume more resources than allocated, and prevent resource contention with other teams.
+
+Create a resource quota file for team-a with the following resource limits:
+
+Name: team-a-resource-quota
+Maximum of 5 pods
+CPU requests: 0.5
+Memory requests: 500Mi
+CPU limits: 1
+Memory limits: 1Gi
+
+```yaml
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: team-a-resource-quota
+  namespace: team-a
+spec:
+  hard:
+    pods: 5
+    requests.cpu: "0.5"
+    requests.memory: "500Mi"
+    limits.cpu: "1"
+    limits.memory: "1Gi"
+```
+- Deploy a pod in the team-a namespace.
+Use the following pod configuration as a starting point:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+  namespace: team-a
+spec:
+  containers:
+  - name: app-container
+    image: nginx
+    ports:
+    - containerPort: 80
+
+Its expected that the pod will be subject to the resource limits defined in the resource quota for team-a.
+
+Assign following resource requests and limits to the pod:
+
+CPU requests: 0.1
+Memory requests: 10Mi
+CPU limits: 0.2
+Memory limits: 50Mi
+
+```yaml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+  namespace: team-a
+spec:
+  containers:
+  - name: app-container
+    image: nginx
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        memory: "10Mi"
+        cpu: "0.1"
+      limits:
+        memory: "50Mi"
+        cpu: "0.2"
+```
+
+- Monitor Resource Usage in Team A
+How to verify quota usage for the team-a namespace for the resource quota team-a-resource-quota?
+```bash
+kubectl describe quota team-a-resource-quota -n team-a
+```
+
+- What is the main purpose of a Resource Quota in Kubernetes?
+  to restrict the amout of resources in a namespace can be consumed
+  
