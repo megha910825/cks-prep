@@ -501,7 +501,125 @@ How to verify quota usage for the team-a namespace for the resource quota team-a
 ```bash
 kubectl describe quota team-a-resource-quota -n team-a
 ```
-
 - What is the main purpose of a Resource Quota in Kubernetes?
   to restrict the amout of resources in a namespace can be consumed
-  
+
+## Securing Network Traffic with Network Policies
+
+- Which OSI layer does Kubernetes Network Policies not operate on?
+   Data link Layer
+- Your task is to create and label three namespaces: namespace-web, namespace-worker, and namespace-ui. Please ensure to label them as follows:
+
+namespace=namespace-web
+namespace=namespace-worker
+namespace=namespace-ui
+Subsequently, deploy the following pods:
+
+An Nginx web server pod named nginx-pod in namespace-web with the image nginx.
+A busybox pod named busybox-pod in namespace-worker with the image busybox, using the command sleep 7600.
+A pod named ui-pod in namespace-ui using the image traefik/whoami.
+Make sure to follow the specified structure for namespaces and pods.
+
+```bash
+k create ns namespace-worker
+k label namespaces namespace-wórker namespace=namespace-worker --overwrite=true
+k run nginx-pod --image=nginx -n namespace-web
+k run ui-pod -n namespace-ui --image=traefik/whoami
+k run busybox-pod --image=busybox -n namespace-worker --command sleep 7600
+k apply -f busybox-pod.yml 
+```
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: busybox-pod
+  name: busybox-pod
+  namespace: namespace-worker
+spec:
+  containers:
+  - image: busybox
+    name: busybox-pod
+    command: ["sleep"]
+    args: ["7600"]
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+```
+
+- Test the connectivity between the busybox-pod in namespace-worker and the nginx-pod in namespace-web before applying any Network Policies.
+
+Get the Cluster IP of the nginx-pod in namespace-web.
+Exec into busybox-pod in namespace-worker and use wget to test connectivity to the Nginx pod.
+Exec into busybox-pod in namespace-worker and use wget to test connectivity to the Traefik-Whoami pod.
+
+```bash
+# Get the Cluster IP of `nginx-pod`
+NGINX_IP=$(kubectl get pod nginx-pod -n namespace-web -o jsonpath='{.status.podIP}')
+
+# Test Connectivity from `busybox-pod`
+kubectl exec -it busybox-pod -n namespace-worker -- wget -qO- http://$NGINX_IP
+
+UI_IP=$(kubectl get pod ui-pod -n namespace-ui -o jsonpath='{.status.podIP}')
+# Test Connectivity from `busybox-pod`
+kubectl exec -it busybox-pod -n namespace-worker -- wget -qO- http://$UI_IP
+```
+
+- Create a Network Policy named allow-specific-ingress in the namespace-ui namespace.
+
+This policy should:
+
+Allow ingress traffic only from pods in the namespace-web namespace
+Deny traffic from all other namespaces (implicit deny via network policy behavior)
+Apply only to pods inside the namespace-ui namespace
+You must create the manifest file named np2.yaml yourself and use it to apply the policy.
+
+Requirements
+Network Policy Name: allow-specific-ingress
+Namespace: namespace-ui
+Policy Type: Ingress
+Ingress Rules: Allow traffic only from namespace-web namespace
+After creating the manifest, apply it to the cluster.
+```yaml
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-specific-ingress
+  namespace: namespace-ui
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              namespace: namespace-web
+```
+- Deny egress traffic from namespace-worker to external sites (internet) using a Network Policy.
+Allow egress traffic from namespace-worker only to internal services in the cluster.
+Create a Network Policy named deny-external-egress in namespace-worker.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-external-egress
+  namespace: namespace-worker
+spec:
+  podSelector: {}  # Selects all pods in namespace-worker
+  policyTypes:
+  - Egress
+  egress:
+  # Allow egress to all pods in all namespaces
+  - to:
+    - namespaceSelector: {}  # All namespaces
+      podSelector: {}        # All pods
+```
+```bash
+kubectl apply -f deny-external-egress.yaml
+# This should fail due to the Network Policy blocking the connection.
+kubectl exec -it test-pod -n namespace-worker -- 'wget -qO- http://google.com || echo "Failed"'
+```
