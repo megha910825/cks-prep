@@ -609,7 +609,7 @@ metadata:
   name: deny-external-egress
   namespace: namespace-worker
 spec:
-  podSelector: {}  # Selects all pods in namespace-worker
+  podSelector: {}  # Selects all pods in namespace-worker 
   policyTypes:
   - Egress
   egress:
@@ -622,4 +622,117 @@ spec:
 kubectl apply -f deny-external-egress.yaml
 # This should fail due to the Network Policy blocking the connection.
 kubectl exec -it test-pod -n namespace-worker -- 'wget -qO- http://google.com || echo "Failed"'
+```
+## Implement Tenant Isolation in a Kubernetes Cluster
+
+- Taint Nodes for Tenant Isolation
+Apply taints to all the worker nodes in your Kubernetes cluster to enforce tenant isolation.
+
+Taint labels:
+team=team-a on node01
+team=team-b on node02
+team=team-c on node03
+This will ensure that only pods with the appropriate tolerations can be scheduled on specific nodes.
+
+```
+  kubectl taint nodes node01 team=team-a:NoSchedule
+  kubectl taint nodes node02 team=team-b:NoSchedule
+  kubectl taint nodes node03 team=team-c:NoSchedule
+  
+```
+- Create the following namespaces to organize resources and enforce boundaries:
+
+team-a
+team-b
+team-c
+```
+  k create ns team-a
+  k create ns team-b
+  k create ns team-c
+```
+- Deploy Pods with Tolerations
+
+For each team namespace, deploy a pod with the appropriate tolerations so that it can be scheduled on its designated node.
+
+team-a
+Name: team-a-pod
+Namespace: team-a
+Tolerations: team=team-a:NoSchedule
+Image: nginx
+team-b
+Name: team-b-pod
+Namespace: team-b
+Tolerations: team=team-b:NoSchedule
+Image: nginx
+team-c
+Name: team-c-pod
+Namespace: team-c
+Tolerations: team=team-c:NoSchedule
+Image: nginx
+```yaml
+   apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: team-a-pod
+  name: team-a-pod
+  namespace: team-a
+spec:
+  containers:
+  - image: nginx
+    name: team-a-pod
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+  tolerations:
+    - key: team
+      operator: Equal
+      value: team-a
+      effect: NoSchedule
+status: {}
+```
+- Verify that each team's pod is scheduled on the correct node.
+
+Run the following commands to check the node assignments:
+
+kubectl get pods -n team-a -o wide
+kubectl get pods -n team-b -o wide
+kubectl get pods -n team-c -o wide
+
+Ensure that:
+
+team-a-pod is running on node01
+team-b-pod is running on node02
+team-c-pod is running on node03
+
+ Attempt to deploy a pod without the appropriate tolerations in the team-a namespace and observe the scheduling behavior.
+
+Determine if the pod is scheduled or remains in the Pending state.
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+  namespace: team-a
+spec:
+  containers:
+  - image: nginx
+    name: team-a-pod
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+```
+- In which scenario would using node taints and tolerations not be appropriate from the options listed below?
+  to allow unrestricted scheduling pods on any node
+- How can node taints and tolerations help during cluster maintenance activities?
+  By preventing new pods from being scheduled on the node while allowing existing pods to continue running.
+- Remove the taints from the nodes:
+
+node01
+node02
+node03
+```
+  kubectl taint nodes node01 team=team-a:NoSchedule-
+  kubectl taint nodes node02 team=team-b:NoSchedule-
+  kubectl taint nodes node03 team=team-c:NoSchedule-
 ```
