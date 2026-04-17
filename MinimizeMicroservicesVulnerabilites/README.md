@@ -736,3 +736,142 @@ node03
   kubectl taint nodes node02 team=team-b:NoSchedule-
   kubectl taint nodes node03 team=team-c:NoSchedule-
 ```
+## Configuring Pod-to-Pod Encryption with Istio
+- Welcome to the Istio Authentication Lab. By the end of this lab, you will be able to configure Authentication in the Istio Service Mesh.
+
+Note that the default namespace has Istio injection enabled. To verify:
+```bash
+  kubectl get ns --show-labels
+```
+- Deploy the Hello World Application using the YAML file below:
+https://raw.githubusercontent.com/istio/istio/refs/heads/master/samples/helloworld/helloworld.yaml
+After deployment, check the pods with:
+
+kubectl get pods
+```
+  kubectl apply -f https://raw.githubusercontent.com/istio/istio/refs/heads/master/samples/helloworld/helloworld.yaml
+```
+- Create a new namespace called test and run a pod named test using the nginx image in it.
+  ```bash
+     k create ns test
+     k run test -n test --image=nginx
+     k get pods -n test
+```
+- Verify that the Hello World application is accessible from the test pod.
+  From the node, check the services:
+
+   kubectl get svc
+   
+   You should see a service called helloworld listening on port 5000.
+   Now, test connectivity:
+   
+   kubectl exec -ti -n test test -- curl helloworld.default.svc.cluster.local:5000/hello
+   
+   You should get a response similar to:
+   Hello version: v1, instance: helloworld-v1-*****
+   
+   IMPORTANT: This works because by default mTLS is not enforced unless you explicitly enable it via PeerAuthentication. This means services can communicate over plain text HTTP.
+- Enabling Istio Injection into the test namespace would result in the services communicating via mTLS. However, let’s enforce this so that no matter what, mTLS would always be used.
+
+Create and apply a global PeerAuthentication policy to enforce STRICT mTLS mode.
+```yaml
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  mtls:
+    mode: STRICT
+
+```
+- Verify that the helloworld endpoint is now inaccessible from the test pod due to mTLS enforcement. To do so, run:
+
+kubectl exec -ti -n test test -- curl --head http://helloworld.default.svc:5000/hello
+
+You should see a connection error.
+
+root@controlplane ~ ➜  kubectl exec -ti -n test test -- curl --head http://helloworld.default.svc:5000/hello
+curl: (56) Recv failure: Connection reset by peer
+command terminated with exit code 56
+
+IMPORTANT: This is happening because Istio Injection is not enabled on the test namespace, so traffic from the test pod to the helloworld endpoint is going over plaintext. But the PeerAuthentication policy is enforcing that all traffic must be mTLS encrypted.
+
+- How do we fix this?
+
+If your first instinct is to enable Istio Injection on the test namespace, delete the test pod and recreate it; you would then be 100% correct.
+
+Let's enable Istio Injection on the test namespace, and then delete and recreate the test pod.
+```bash
+   kubectl label namespace test istio-injection=enabled
+   k delete pod -n test test
+   k run test -n test --image=nginx
+```
+- To demonstrate namespace-level override, we removed Istio Injection from the test namespace. Now, the traffic is back to being denied because of the global PeerAuthentication policy in place.
+
+root@controlplane ~ ➜  kubectl exec -ti -n test test -- curl --head http://helloworld.default.svc:5000/hello 
+curl: (56) Recv failure: Connection reset by peer
+command terminated with exit code 56
+- Let’s override this for the default namespace where the Hello World app lives.
+
+Create a namespace-level PeerAuthentication policy in the default namespace with PERMISSIVE mode
+```yaml
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+spec:
+  mtls:
+    mode: PERMISSIVE
+```
+- The Hello World endpoint should now become accessible again due to the PERMISSIVE policy applied on the default namespace overriding the global STRICT policy. To verify:
+
+kubectl exec -ti -n test test -- curl --head http://helloworld.default.svc:5000/hello
+
+You should get a 200 OK response.
+
+root@controlplane ~ ➜  kubectl exec -ti -n test test -- curl --head http://helloworld.default.svc:5000/hello 
+HTTP/1.1 200 OK
+server: istio-envoy
+date: Mon, 21 Apr 2025 11:16:26 GMT
+content-type: text/html; charset=utf-8
+content-length: 59
+x-envoy-upstream-service-time: 95
+x-envoy-decorator-operation: helloworld.default
+
+- Now, let's restrict the policy to only work for the Hello World app. Modify the PeerAuthentication policy to be applicable only to the helloworld workload using the selector matchLabels.
+```yaml
+  apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+spec:
+  mtls:
+    mode: PERMISSIVE
+  selector:
+    matchLabels:
+      app: helloworld
+```
+- To test that, let's deploy the BookInfo app by running:
+
+kubectl apply -f https://raw.githubusercontent.co
+
+- Given that we restricted our PERMISSIVE workload policy to apply only to the Hello World app, the BookInfo app should be inaccessible from the test pod due to the global STRICT policy in place. Let's verify that.
+
+Testing connectivity from the test pod to the BookInfo app should fail. You can test that via curl to the following URL http://productpage.default.svc:9080/productpage from the test pod:
+
+root@controlplane ~ ➜  kubectl exec -ti -n test test -- curl --head http://productpage.default.svc:9080/productpage
+curl: (56) Recv failure: Connection reset by peer
+command terminated with exit code 56
+
+Connectivity from the test pod to the Hello World app should succeed:
+
+root@controlplane ~ ➜  kubectl exec -ti -n test test -- curl --head http://helloworld.default.svc:5000/hello
+
+HTTP/1.1 200 OK
+server: istio-envoy
+date: Mon, 21 Apr 2025 11:26:16 GMT
+content-type: text/html; charset=utf-8
+content-length: 59
+x-envoy-upstream-service-time: 106
+x-envoy-decorator-operation: helloworld.default 
