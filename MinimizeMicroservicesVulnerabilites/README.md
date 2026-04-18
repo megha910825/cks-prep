@@ -875,3 +875,89 @@ content-type: text/html; charset=utf-8
 content-length: 59
 x-envoy-upstream-service-time: 106
 x-envoy-decorator-operation: helloworld.default 
+
+## Configuring Pod-to-Pod Encryption with Cilium
+- Install Cilium in your Kubernetes cluster and enable pod-to-pod encryption.
+  If Cilium is not already installed, install it in your cluster.
+  Enable wireguard encryption in Cilium by configurations.
+  NOTE: Please wait for sometime after installing Cilium to ensure that the pods are running and the encryption is enabled.
+
+  ```
+  CILIUM_CLI_VERSION=$(curl -s https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt)
+CLI_ARCH=amd64
+if [ "$(uname -m)" = "aarch64" ]; then CLI_ARCH=arm64; fi
+curl -L --fail --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
+sha256sum --check cilium-linux-${CLI_ARCH}.tar.gz.sha256sum
+sudo tar xzvfC cilium-linux-${CLI_ARCH}.tar.gz /usr/local/bin
+rm cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
+  ```
+```
+  cilium install --version 1.19.3 \
+   --set encryption.enabled=true \
+   --set encryption.type=wireguard
+  cilium status --wait
+```
+- In a real-world production environment, why would you choose to enable pod-to-pod encryption using Cilium with WireGuard?
+to comply with data protection that requires compliance of data in transit.
+
+- What is a key advantage of using Cilium with WireGuard encryption in a multi-tenant Kubernetes cluster?
+It ensures that network traffic between tenants is isolated and encrypted, enhancing security.
+
+- What is WireGuard?
+  A VPN protocol that provides encrypted network communication.
+
+- Deploy an NGINX pod labeled app: nginx that will serve as the application to test encrypted traffic.
+
+   image: nginx
+   replicas: 1
+   port: 80
+   Create a service named nginx to expose the NGINX deployment.
+   
+   port: 80
+   targetPort: 80
+   Deploy a client pod named curlpod that will act as a client to test connectivity to the NGINX pod.
+   
+   image: rapidfort/curl
+   command: sleep 3600
+   label: app: curlpod
+
+```
+kubectl create deployment nginx-deploy --image=nginx --replicas=1 --port=80 --dry-run=client -o yaml > nginx-deploy.yml
+kubectl expose deployment nginx-deploy --port=80 --target-port=80
+k run curlpod --image=rapidfort/curl --labels=app=curlpod -- sleep 3600 
+```
+
+
+- Validate the Setup
+Check connectivity between the pods, in a new terminal window run the following command:
+
+
+
+watch kubectl exec -it curlpod -- curl -s http://nginx
+
+The watch curl command should return the HTML content of the NGINX welcome page, indicating that the client pod can access the NGINX pod.
+
+Run a bash shell in one of the Cilium pods with kubectl -n kube-system exec -ti ds/cilium -- bash and execute the following commands:
+
+Check that WireGuard has been enabled (number of peers should correspond to a number of nodes subtracted by one):
+
+cilium-dbg status | grep Encryption
+
+Install tcpdump
+
+apt-get update
+apt-get -y install tcpdump
+
+Check that traffic is sent via the cilium_wg0 tunnel device is encrypted:
+
+tcpdump -n -i cilium_wg0 -X
+
+Here we are using `tcpdump`` to capture and display detailed network packets on the cilium_wg0 interface.
+
+The -n option avoids DNS lookups, and the -X option shows packet content in both hexadecimal and ASCII format.
+
+Via tcpdump, you should see the traffic between the pods.
+
+We see requests from curlpod to nginx and responses from nginx to curlpod in tcpdump output.<img width="1955" height="1157" alt="image" src="https://github.com/user-attachments/assets/ea903e48-ab72-42ee-a9e3-d04165dd12b2" />
+
+   
