@@ -144,3 +144,205 @@ jobs:
         name: spdx-report
         path: spdx.json       #modified
 ```
+## Performing Static Analysis with KubeLinter
+
+- Download the latest release of KubeLinter for Linux and move the binary to the /usr/local/bin/ path.
+```
+ # Download the latest version of KubeLinter for Linux using the command below:
+curl -LO https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz
+# Extract the binary from the tar file:
+tar -xvf kube-linter-linux.tar.gz
+# Move the binary to the /usr/local/bin/ path:
+mv kube-linter /usr/local/bin/
+```
+- Analyze a Kubernetes Manifest stored in /root/nginx.yml and store the result in /root/analyze
+  ```
+  kube-linter lint /root/nginx.yml>/root/analyze
+  ```
+- If memory limits are not set for the nginx container, what could be the potential consequence?
+  the container will have unlimited access to node memory, risking node instability if it consumes too much.
+
+- What is the likely impact of not setting CPU requests for the nginx container?
+  the container may compete for cpu with other containers, leading to unstable performance
+
+- 7 / 17
+Based on the results from KubeLinter, let's implement the best practices in the /root/nginx.yml file.
+
+Set resource requests:
+
+cpu: 250m
+memory: 64Mi
+Set resource limits:
+
+cpu: 500m
+memory: 128Mi
+
+```yaml
+  apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+```
+- What is the risk if the nginx container does not have a read-only root filesystem?
+  Without a read-only root filesystem, the container's root filesystem is writable, which increases security risks. An attacker or process could modify files in the root filesystem, leading to potential vulnerabilities. Setting the root filesystem to read-only prevents these unauthorized modifications.
+
+- What could happen if the nginx container is not set to run as a non-root user?
+  the container possesses elevated priviledges , which may highten its vulnerability of attacks.
+  
+- Based on the results from KubeLinter, let's implement the best practices in the /root/nginx.yml file.
+  Enable a read-only root filesystem.
+  Configure to run as a non-root user.
+  ```yaml
+    apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+        resources:                      
+          requests:                     
+            memory: "64Mi"             
+            cpu: "250m"                 
+          limits:                       
+            memory: "128Mi"            
+            cpu: "500m"
+        securityContext:               #added
+          readOnlyRootFilesystem: true #added
+          runAsUser: 1000              #added
+          runAsNonRoot: true           #added
+  ```
+- What will happen if inter-pod anti-affinity is not specified in the nginx deployment configuration?
+the pod might scheduled all on the same node, risking all replicas failing, if that node fails.
+- 12 / 17
+Based on the results from KubeLinter, let's implement the best practices in the /root/nginx.yml file.
+
+In the /root/nginx.yml file, implement anti-affinity in your pod specification to ensure that the orchestrator schedules replicas on different nodes.
+Use the app: nginx label.
+Set the topologyKey to kubernetes.io/hostname
+```yaml
+  apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      affinity:                                               #added
+        podAntiAffinity:                                      #added
+          requiredDuringSchedulingIgnoredDuringExecution:     #added
+          - labelSelector:                                    #added
+              matchExpressions:                               #added
+              - key: app                                      #added
+                operator: In                                  #added
+                values:                                       #added
+                - nginx                                       #added
+            topologyKey: "kubernetes.io/hostname"             #added
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsUser: 1000
+          runAsNonRoot: true    
+```
+- After implementing all the best security practices, analyze the /root/nginx.yml file again.
+How many recommendations are suggested?
+- Review the Dockerfile at /cks/docker/Dockerfile. What is the prominent security issue with the USER instruction in this file?
+The Dockerfile contains USER root, which means the container process runs as the root user. This is a significant security risk because if an attacker gains access to the container, they will have full root privileges, which could allow them to escape the container or compromise the host system. The best practice is to run containers as a non-root user.
+
+- Next
+
+15 / 17
+Analyze and edit the Dockerfile at /cks/docker/Dockerfile.
+
+Fix the one instruction that has a prominent security / best-practice issue.
+
+Do not add or remove any instructions.
+Only modify the existing instruction.
+If you need to a use non-root user , use user www-data
+The security issue is the USER root instruction. The container should not run as root.
+Answer:
+Edit the Dockerfile and change:
+
+USER root
+to a non-root user, for example:
+
+USER www-data
+This ensures the container runs as a non-privileged user instead of root.
+
+- Review the deployment manifest at /cks/docker/deployment.yaml. What is the prominent security issue with the securityContext in this file?
+  allowPriviledgeEscalation is true
+
+- Analyze and edit the deployment manifest at /cks/docker/deployment.yaml.
+
+Fix the one field that has a prominent security / best-practice issue.
+
+Do not add or remove any configuration settings.
+Only modify the existing field.
+
+Answer: The security issue is allowPrivilegeEscalation: true. This allows container processes to gain additional privileges.
+
+Edit the deployment manifest and change:
+
+allowPrivilegeEscalation: true
+to:
+
+allowPrivilegeEscalation: false
+This prevents any process inside the container from gaining more privileges than its parent, which is a critical security hardening measure.
