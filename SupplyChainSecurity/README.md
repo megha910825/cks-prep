@@ -46,3 +46,6 @@ grype sbom:/root/webapp-sbom.json --output json | jq . > /root/grype-report.json
 ```
 - The vulnerability CVE-2018-1000517 in BusyBox wget may lead to which type of security issue?
 Heap Buffer overflow(see the vulnerability in json file)
+
+## Automating SBOM Generation in CI/CD
+-
