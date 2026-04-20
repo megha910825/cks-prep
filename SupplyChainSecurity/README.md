@@ -346,3 +346,67 @@ to:
 
 allowPrivilegeEscalation: false
 This prevents any process inside the container from gaining more privileges than its parent, which is a critical security hardening measure.
+
+## Image Security
+
+- What secret type must we choose for docker registry?
+  docker-registry
+- We have an application running on our cluster. Let us explore it first. What image is the application using?
+  ```
+  k get deploment web -o yaml
+  ```
+- We decided to use a modified version of the application from an internal private registry. Update the image of the deployment to use a new image from myprivateregistry.com:5000
+The registry is located at myprivateregistry.com:5000. Don't worry about the credentials for now. We will configure them in the upcoming steps.
+
+```bash
+  k set image deployments/web nginx=myprivateregistry.com:5000/nginx:alpine
+```
+- Are the new PODs created with the new images successfully running?
+  ```bash
+  k get pods
+  ```
+- Create a secret object with the credentials required to access the registry.
+    Name: private-reg-cred
+    Username: dock_user
+    Password: dock_password
+    Server: myprivateregistry.com:5000
+    Email: dock_user@myprivateregistry.com
+  ```
+  k create secret docker-registry private-reg-cred --docker-username=dock_user --docker-password=dock_password --docker-server=myprivateregistry.com:5000 --docker-  email=dock_user@myprivateregistry.com
+  ```
+  - Configure the deployment to use credentials from the new secret to pull images from the private registry
+    ```yaml
+      apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "2"
+  labels:
+    app: web
+  name: web
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - image: myprivateregistry.com:5000/nginx:alpine
+        name: nginx
+        resources: {}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      imagePullSecrets: 
+        - name: private-reg-cred
+    ```
