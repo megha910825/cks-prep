@@ -112,7 +112,52 @@ Update the below rule in /etc/falco/falco_rules.local.yaml:
 
 Next, hot-reload the falco configuration by running kill -1 $(cat /var/run/falco.pid)
 
+## Ensure Immutability of Containers at Runtime
 
+- We have deployed a few pods in the alpha namespace. Which one of them cannot be considered as an immutable pod?
+
+In this case, both the pods - solaris and triton break the concept of immutability.
+
+triton does not make use of read-only filesystem.
+
+And solaris, although it makes use of read-only filesystem, uses the privileged flag which is highly unsecured.
+
+- Let's fix that. Make sure that the triton pod uses a read-only root filesystem.
+
+
+
+
+pod name: triton
+
+Image Name: httpd
+
+read-only root filesystem?
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    name: triton
+    namespace: alpha
+  name: triton
+  namespace: alpha
+spec:
+  containers:
+  - image: httpd
+    name: triton
+    securityContext:
+      readOnlyRootFilesystem: true
+```
+- what`s the current status if triton pod
+```
+  k get pod triton -n alpha
+```
+- Why is it in this state?
+
+Inspect the logs to find out the reason.
+
+read onl root file system prevented imagefrom download.
 
 
 
