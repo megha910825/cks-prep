@@ -169,6 +169,27 @@ mountPath: /usr/local/apache2/logs
 
 Type: emptyDir
 
+```yaml
+ apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    name: triton
+  name: triton
+  namespace: alpha
+spec:
+  containers:
+  - image: httpd
+    name: triton
+    securityContext:
+      readOnlyRootFilesystem: true
+    volumeMounts:
+    - mountPath: /usr/local/apache2/logs
+      name: log-volume
+  volumes:
+  - name: log-volume
+    emptyDir: {}
+```
 
 
 
