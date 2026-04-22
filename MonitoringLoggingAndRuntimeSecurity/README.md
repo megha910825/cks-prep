@@ -157,7 +157,19 @@ spec:
 
 Inspect the logs to find out the reason.
 
-read onl root file system prevented imagefrom download.
+```
+k logs triton -n alpha
+```
+- Add a volume of type emptyDir to be mounted at the path /usr/local/apache2/logs inside the container running in the triton pod. Use the below specs:
+
+
+volume-name: log-volume
+
+mountPath: /usr/local/apache2/logs
+
+Type: emptyDir
+
+
 
 
 
