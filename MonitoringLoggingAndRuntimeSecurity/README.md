@@ -190,6 +190,17 @@ spec:
   - name: log-volume
     emptyDir: {}
 ```
+- Another pod called grimsby has been created inside the alpha namespace. Currently it runs as the root user.
+
+
+Update the pod so that it runs with the uid of 1000 and gid of 3000.
+```yaml
+ securityContext:
+      runAsUser: 1000
+      runAsGroup: 3000
+```
+- Using privileged containers is a huge security risk! Delete the solaris pod entirely from the cluster.
+
 
 
 
