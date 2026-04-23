@@ -201,9 +201,197 @@ Update the pod so that it runs with the uid of 1000 and gid of 3000.
 ```
 - Using privileged containers is a huge security risk! Delete the solaris pod entirely from the cluster.
 
+##  Use Audit Logs to monitor access
+
+- Which component in the Kubernetes cluster is responsible for handling audit logs?
+kube-apiserver
+
+- Is auditing enabled at this moment?
+
+Check the command used by the kube-apiserver pod to find out. This cluster has been deployed using kubeadm so check accordingly.
+```
+ ps -aux|grep kube-apiserver |grep audit
+```
+- Which stage generates events when a request is complete?
+ResponseComplete
+
+- In an audit policy object, what level would you configure for highest verbosity of logs?
+RequestResponse
+
+- A sample policy file called audit-1.yaml has been created under the root filesystem in the controlplane. Analyze it.
+
+Which audit events will be logged by this policy?
+
+log all request at metadata level.
+
+- 6 / 7
+You need to enable auditing on this Kubernetes cluster.
 
 
+A basic policy file is available at /etc/kubernetes/cluster-policy.yaml.
 
+
+Task 1 – Configure the kube-apiserver to enable auditing:
+
+Audit policy file: /etc/kubernetes/cluster-policy.yaml
+
+Audit log path: /var/log/cluster-audit.log
+
+Log retention: 10 days
+
+Maximum log size: 10 MB
+
+Maximum rotated files: 3
+
+
+Add the required flags, volumes, and volume mounts to the kube-apiserver static pod manifest. Wait for the API server to restart and confirm the log file is being created.
+
+
+Task 2 – Update the audit policy with the following rules (in order):
+
+None – health-check and non-resource URLs (/healthz*, /livez*, /readyz*, /version, /metrics)
+None – watch and list verbs
+RequestResponse – Deployment changes (create, update, patch, delete) in the citadel namespace
+Metadata – secrets and configmaps
+Request – namespaces resource interactions
+Metadata – everything else (catch-all)
+
+
+Omit the RequestReceived stage.
+
+Step 1 – Configure the audit policy file
+Edit /etc/kubernetes/cluster-policy.yaml:
+
+apiVersion: audit.k8s.io/v1
+kind: Policy
+omitStages:
+  - "RequestReceived"
+rules:
+  # 1) NONE: health checks + non-resource endpoints
+  - level: None
+    nonResourceURLs:
+      - "/healthz*"
+      - "/livez*"
+      - "/readyz*"
+      - "/version"
+      - "/metrics"
+
+  # 2) NONE: noisy watch/list
+  - level: None
+    verbs: ["watch", "list"]
+
+  # 3) Deployment changes in citadel namespace at RequestResponse
+  - level: RequestResponse
+    namespaces: ["citadel"]
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: "apps"
+        resources: ["deployments"]
+
+  # 4) Secrets + ConfigMaps at Metadata
+  - level: Metadata
+    resources:
+      - group: ""
+        resources: ["secrets", "configmaps"]
+
+  # 5) Namespace interactions at Request
+  - level: Request
+    resources:
+      - group: ""
+        resources: ["namespaces"]
+
+  # 6) Everything else at Metadata
+  - level: Metadata
+Step 2 – Enable auditing in the kube-apiserver
+Edit /etc/kubernetes/manifests/kube-apiserver.yaml and add these flags to the command section:
+
+    - --audit-policy-file=/etc/kubernetes/cluster-policy.yaml
+    - --audit-log-path=/var/log/cluster-audit.log
+    - --audit-log-maxage=10
+    - --audit-log-maxbackup=3
+    - --audit-log-maxsize=10
+Add the following under volumes:
+
+  - hostPath:
+      path: /etc/kubernetes/cluster-policy.yaml
+      type: File
+    name: audit-policy
+  - hostPath:
+      path: /var/log/
+      type: Directory
+    name: varlog
+Add the following under volumeMounts:
+
+    - mountPath: /etc/kubernetes/cluster-policy.yaml
+      name: audit-policy
+      readOnly: true
+    - mountPath: /var/log/
+      name: varlog
+Save the file and wait for the API server to restart:
+
+kubectl get pods -n kube-system
+Verify the log file is being created:
+
+ls -l /var/log/cluster-audit.log
+Troubleshooting
+If the API server does not restart, use these commands to investigate:
+
+# Check if the container is running or in a crash loop
+crictl ps -a | grep kube-apiserver
+
+# View container logs for errors
+crictl logs <CONTAINER_ID>
+
+# Check for YAML syntax errors
+cat /etc/kubernetes/manifests/kube-apiserver.yaml | python3 -c 'import sys,yaml; yaml.safe_load(sys.stdin)'
+
+# Common issues:
+# - Incorrect indentation in kube-apiserver.yaml
+# - Wrong volume/volumeMount names (must match)
+# - Policy file path does not exist on the host
+# - Missing volumeMou
+
+- The kube-apiserver is not starting after a colleague made changes to enable auditing. Troubleshoot and fix the issue.
+
+
+The kube-apiserver static pod manifest at /etc/kubernetes/manifests/kube-apiserver.yaml was modified but the API server is now in a CrashLoopBackOff state.
+
+
+Identify the issue, fix it, and make sure the API server comes back up and auditing is working correctly.
+
+
+Hint: Use crictl to inspect the kube-apiserver container and check its logs.
+
+Troubleshooting Steps
+Step 1 – Check the kube-apiserver container status:
+
+crictl ps -a | grep kube-apiserver
+You will see the container is in an exited or crash-looping state.
+
+Step 2 – Check the container logs:
+
+crictl logs <CONTAINER_ID>
+Look for error messages related to audit configuration.
+
+Step 3 – Identify the issue:
+The error message will indicate that the audit policy file cannot be found. This is because the volume mount name audit-policyyy does not match the volume name audit-policy.
+
+Step 4 – Fix the issue:
+Edit /etc/kubernetes/manifests/kube-apiserver.yaml and correct the volumeMount name from audit-policyyy to audit-policy:
+
+    - mountPath: /etc/kubernetes/cluster-policy.yaml
+      name: audit-policy    # was: audit-policyyy
+      readOnly: true
+Step 5 – Verify the fix:
+
+# Wait for the API server to restart
+crictl ps | grep kube-apiserver
+
+# Or use kubectl once it's back
+kubectl get pods -n kube-system
+
+# Verify audit logs are being written
+ls -l /var/log/cluster-audit.log
 
 
 
