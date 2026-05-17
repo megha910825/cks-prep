@@ -111,7 +111,10 @@ Update the below rule in /etc/falco/falco_rules.local.yaml:
 
 
 Next, hot-reload the falco configuration by running kill -1 $(cat /var/run/falco.pid)
-
+- to get list of ever possible field available:
+  ```bash
+  falco --list
+  ```
 ## Ensure Immutability of Containers at Runtime
 
 - We have deployed a few pods in the alpha namespace. Which one of them cannot be considered as an immutable pod?
